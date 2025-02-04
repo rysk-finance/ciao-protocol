@@ -91,7 +91,12 @@ contract AddressManifest is Owned {
     /// @param subAccountId the id of the sub account to change the signer for
     /// @param approvedSigner the signer to approve as able to sign on behalf of the subAccount
     /// @param isApproved whether to approve the signer or not
-    function approveSigner(address account, uint8 subAccountId, address approvedSigner, bool isApproved) external {
+    function approveSigner(
+        address account,
+        uint8 subAccountId,
+        address approvedSigner,
+        bool isApproved
+    ) external {
         if (requiresDispatchCall) {
             if (msg.sender != manifest[4]) revert Errors.SenderInvalid();
         } else {

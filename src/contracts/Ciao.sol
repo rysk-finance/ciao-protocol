@@ -129,11 +129,19 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
         // get the baseAsset and quoteAsset
         Structs.Product memory product = _productCatalogue().products(productId);
         if (isTakerBuy) {
-            _updateBalance(takerSubAccount, makerSubAccount, product.baseAsset, baseQuantity, takerFee);
-            _updateBalance(makerSubAccount, takerSubAccount, product.quoteAsset, quoteQuantity, makerFee);
+            _updateBalance(
+                takerSubAccount, makerSubAccount, product.baseAsset, baseQuantity, takerFee
+            );
+            _updateBalance(
+                makerSubAccount, takerSubAccount, product.quoteAsset, quoteQuantity, makerFee
+            );
         } else {
-            _updateBalance(makerSubAccount, takerSubAccount, product.baseAsset, baseQuantity, makerFee);
-            _updateBalance(takerSubAccount, makerSubAccount, product.quoteAsset, quoteQuantity, takerFee);
+            _updateBalance(
+                makerSubAccount, takerSubAccount, product.baseAsset, baseQuantity, makerFee
+            );
+            _updateBalance(
+                takerSubAccount, makerSubAccount, product.quoteAsset, quoteQuantity, takerFee
+            );
         }
         if (sequencerFee > 0) {
             _settleCoreCollateral(takerSubAccount, -int256(sequencerFee));
@@ -146,7 +154,10 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
     /// @dev Must be called by the OrderDispatch or Liquidation
     /// @param subAccount the sub account of the account to update
     /// @param coreCollateralQuantity the value to add or subtract to the subAccount's balance
-    function settleCoreCollateral(address subAccount, int256 coreCollateralQuantity) external nonReentrant {
+    function settleCoreCollateral(address subAccount, int256 coreCollateralQuantity)
+        external
+        nonReentrant
+    {
         // check that the caller is the order dispatch or liquidation
         _isBalanceUpdater();
         subAccountAssets[subAccount].add(coreCollateralAddress);
@@ -179,7 +190,10 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
     /// @param subAccountId the sub account to be used for the deposit
     /// @param quantity quantity of the asset to deposit
     /// @param asset address representing the product being deposited
-    function deposit(address account, uint8 subAccountId, uint256 quantity, address asset) external nonReentrant {
+    function deposit(address account, uint8 subAccountId, uint256 quantity, address asset)
+        external
+        nonReentrant
+    {
         if (requiresDispatchCall) {
             if (msg.sender != _orderDispatch()) revert Errors.SenderInvalid();
         } else {
@@ -217,7 +231,10 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
     /// @param subAccountId the sub account to be used for the withdraw
     /// @param quantity quantity of the asset to withdraw
     /// @param asset address representing the asset to be traded
-    function requestWithdrawal(uint8 subAccountId, uint256 quantity, address asset) external nonReentrant {
+    function requestWithdrawal(uint8 subAccountId, uint256 quantity, address asset)
+        external
+        nonReentrant
+    {
         if (requiresDispatchCall) {
             revert Errors.SenderInvalid();
         }
@@ -228,7 +245,8 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
             revert Errors.WithdrawQuantityInvalid();
         }
         // record the withdrawal receipt
-        withdrawalReceipts[subAccount][asset] = Structs.WithdrawalReceipt(quantityE18, block.timestamp);
+        withdrawalReceipts[subAccount][asset] =
+            Structs.WithdrawalReceipt(quantityE18, block.timestamp);
         // emit an event to show the withdrawal was requested
         emit Events.RequestWithdrawal(msg.sender, subAccountId, asset, quantity);
     }
@@ -261,11 +279,19 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
     // Basic Getters
     //////////////////////////////////////
 
-    function isAssetInSubAccountAssetSet(address subAccount, address _a) external view returns (bool) {
+    function isAssetInSubAccountAssetSet(address subAccount, address _a)
+        external
+        view
+        returns (bool)
+    {
         return subAccountAssets[subAccount].contains(_a);
     }
 
-    function assetAtIndexInSubAccountAssetSet(address subAccount, uint256 _i) external view returns (address) {
+    function assetAtIndexInSubAccountAssetSet(address subAccount, uint256 _i)
+        external
+        view
+        returns (address)
+    {
         return subAccountAssets[subAccount].at(_i);
     }
 
@@ -280,7 +306,9 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
     // Internals
     //////////////////////////////////////
 
-    function _withdraw(address account, address subAccount, uint256 quantity, address asset) internal {
+    function _withdraw(address account, address subAccount, uint256 quantity, address asset)
+        internal
+    {
         // The account has the full quantity withdrawn from balance
         _changeBalance(subAccount, asset, -int256(quantity));
         // if the balance becomes zero then remove the asset from the set
@@ -302,7 +330,9 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
         } else {
             balances[subAccount][asset] -= uint256(-change);
         }
-        emit Events.BalanceChanged(subAccount, asset, balanceBefore, int256(balances[subAccount][asset]));
+        emit Events.BalanceChanged(
+            subAccount, asset, balanceBefore, int256(balances[subAccount][asset])
+        );
     }
 
     function _updateBalance(
@@ -339,8 +369,8 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
     }
 
     function _settleCoreCollateral(address subAccount, int256 coreCollateralQuantity) internal {
-        int256 balanceBefore =
-            int256(balances[subAccount][coreCollateralAddress]) - int256(coreCollateralDebt[subAccount]);
+        int256 balanceBefore = int256(balances[subAccount][coreCollateralAddress])
+            - int256(coreCollateralDebt[subAccount]);
         if (coreCollateralQuantity >= 0) {
             uint256 absoluteBCA = uint256(coreCollateralQuantity);
             uint256 existingDebt = coreCollateralDebt[subAccount];

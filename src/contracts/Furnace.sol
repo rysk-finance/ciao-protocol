@@ -71,9 +71,10 @@ contract Furnace is AccessControl {
         }
     }
 
-    function setProductRiskWeight(uint32 productId, Structs.ProductRiskWeights calldata newProductRiskWeights)
-        external
-    {
+    function setProductRiskWeight(
+        uint32 productId,
+        Structs.ProductRiskWeights calldata newProductRiskWeights
+    ) external {
         _isAdmin();
         productRiskWeights[productId] = newProductRiskWeights;
         emit Events.RiskWeightsSet(
@@ -85,7 +86,10 @@ contract Furnace is AccessControl {
         );
     }
 
-    function setSpotRiskWeight(address spotAsset, Structs.ProductRiskWeights calldata newSpotRiskWeights) external {
+    function setSpotRiskWeight(
+        address spotAsset,
+        Structs.ProductRiskWeights calldata newSpotRiskWeights
+    ) external {
         _isAdmin();
         spotRiskWeights[spotAsset] = newSpotRiskWeights;
         emit Events.SpotRiskWeightsSet(
@@ -119,7 +123,11 @@ contract Furnace is AccessControl {
     /// @param subAccount the subAccount to calculate health for
     /// @param isInitial true if initial health, false if maintenance health
     /// @return health the initial or maintenance health of the subAccount
-    function getSubAccountHealth(address subAccount, bool isInitial) public view returns (int256 health) {
+    function getSubAccountHealth(address subAccount, bool isInitial)
+        public
+        view
+        returns (int256 health)
+    {
         // initialise struct for temporary memory vars to stop Stack Too Deep
         Structs.SubAccountHealthVars memory tempVars;
 
@@ -131,8 +139,9 @@ contract Furnace is AccessControl {
         tempVars.numPerpPositions = tempVars.perpPositionIds.length;
         for (uint256 i = 0; i < tempVars.assetsLen; i++) {
             address spotAssetAddress = tempVars.spotAssets[i];
-            uint32 spotProductId =
-                _productCatalogue().baseAssetQuoteAssetSpotIds(spotAssetAddress, _ciao().coreCollateralAddress());
+            uint32 spotProductId = _productCatalogue().baseAssetQuoteAssetSpotIds(
+                spotAssetAddress, _ciao().coreCollateralAddress()
+            );
             uint256 spotBalance = _ciao().balances(subAccount, spotAssetAddress);
             if (spotProductId == CORE_COLLATERAL_INDEX) {
                 health += int256(spotBalance) - int256(_ciao().coreCollateralDebt(subAccount));
@@ -146,7 +155,8 @@ contract Furnace is AccessControl {
 
             // check to see if any spread positions on this asset are held
             uint32 perpId = baseAssetQuotePerpIds[spotAssetAddress];
-            Structs.PositionState memory perpPos = tempVars.perpCrucible.subAccountPositions(perpId, subAccount);
+            Structs.PositionState memory perpPos =
+                tempVars.perpCrucible.subAccountPositions(perpId, subAccount);
 
             uint256 spreadQuantity = spreadPenalties[spotAssetAddress].maintenance == 1e18
                 ? 0
@@ -206,8 +216,9 @@ contract Furnace is AccessControl {
         for (uint256 i = 0; i < tempVars.numPerpPositions; i++) {
             // if equals 0, means health has been accounted for in spreads
             if (tempVars.perpPositionIds[i] == 0) continue;
-            Structs.PositionState memory perpPos =
-                tempVars.perpCrucible.subAccountPositions(uint32(tempVars.perpPositionIds[i]), subAccount);
+            Structs.PositionState memory perpPos = tempVars.perpCrucible.subAccountPositions(
+                uint32(tempVars.perpPositionIds[i]), subAccount
+            );
 
             uint256 perpPrice = prices[uint32(tempVars.perpPositionIds[i])];
 
@@ -227,15 +238,27 @@ contract Furnace is AccessControl {
     // Basic Getters
     //////////////////////////////////////
 
-    function getSpreadPenalty(address spotAddress) external view returns (Structs.SpreadPenalties memory) {
+    function getSpreadPenalty(address spotAddress)
+        external
+        view
+        returns (Structs.SpreadPenalties memory)
+    {
         return (spreadPenalties[spotAddress]);
     }
 
-    function getSpotRiskWeights(address spotAddress) external view returns (Structs.ProductRiskWeights memory) {
+    function getSpotRiskWeights(address spotAddress)
+        external
+        view
+        returns (Structs.ProductRiskWeights memory)
+    {
         return (spotRiskWeights[spotAddress]);
     }
 
-    function getProductRiskWeights(uint32 productId) external view returns (Structs.ProductRiskWeights memory) {
+    function getProductRiskWeights(uint32 productId)
+        external
+        view
+        returns (Structs.ProductRiskWeights memory)
+    {
         return (productRiskWeights[productId]);
     }
 

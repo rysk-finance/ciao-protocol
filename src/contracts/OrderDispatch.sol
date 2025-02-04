@@ -44,7 +44,8 @@ contract OrderDispatch is EIP712Upgradeable {
     string constant APPROVE_SIGNER =
         "ApproveSigner(address account,uint8 subAccountId,address approvedSigner,bool isApproved,uint64 nonce)";
 
-    string constant DEPOSIT = "Deposit(address account,uint8 subAccountId,address asset,uint256 quantity,uint64 nonce)";
+    string constant DEPOSIT =
+        "Deposit(address account,uint8 subAccountId,address asset,uint256 quantity,uint64 nonce)";
 
     string constant WITHDRAW =
         "Withdraw(address account,uint8 subAccountId,address asset,uint128 quantity,uint64 nonce)";
@@ -122,7 +123,9 @@ contract OrderDispatch is EIP712Upgradeable {
         (Structs.Deposit memory depo, bytes memory depositSig) = Parser.parseDepositBytes(payload);
         bytes32 digest = getDepositDigest(depo);
         addressManifest.checkInDigestAsUsed(digest);
-        if (!checkSignature(depo.account, depo.subAccountId, digest, depositSig)) revert Errors.SignatureInvalid();
+        if (!checkSignature(depo.account, depo.subAccountId, digest, depositSig)) {
+            revert Errors.SignatureInvalid();
+        }
         ICiao(Commons.ciao(address(addressManifest))).deposit(
             depo.account, depo.subAccountId, depo.quantity, depo.asset
         );
@@ -131,7 +134,8 @@ contract OrderDispatch is EIP712Upgradeable {
     /// @notice function for withdraw from Ciao
     /// @dev function can only be accessed by the operator
     function withdraw(bytes calldata payload) internal {
-        (Structs.Withdraw memory withdrawal, bytes memory withdrawSig) = Parser.parseWithdrawBytes(payload);
+        (Structs.Withdraw memory withdrawal, bytes memory withdrawSig) =
+            Parser.parseWithdrawBytes(payload);
         bytes32 digest = getWithdrawDigest(withdrawal);
         addressManifest.checkInDigestAsUsed(digest);
         ICiao ciao = ICiao(Commons.ciao(address(addressManifest)));
@@ -140,12 +144,16 @@ contract OrderDispatch is EIP712Upgradeable {
         if (!checkSignature(withdrawal.account, withdrawal.subAccountId, digest, withdrawSig)) {
             if (
                 ciao.withdrawalReceipts(
-                    Commons.getSubAccount(withdrawal.account, withdrawal.subAccountId), withdrawal.asset
+                    Commons.getSubAccount(withdrawal.account, withdrawal.subAccountId),
+                    withdrawal.asset
                 ).quantity < withdrawal.quantity
             ) revert Errors.SignatureInvalid();
         }
         ciao.executeWithdrawal(
-            withdrawal.account, withdrawal.subAccountId, uint256(withdrawal.quantity), withdrawal.asset
+            withdrawal.account,
+            withdrawal.subAccountId,
+            uint256(withdrawal.quantity),
+            withdrawal.asset
         );
     }
 
@@ -160,7 +168,9 @@ contract OrderDispatch is EIP712Upgradeable {
     /// @dev function can only be accessed by the operator
     function updateCumulativeFunding(bytes calldata payload) internal {
         bytes memory _payload = payload;
-        IPerpCrucible(Commons.perpCrucible(address(addressManifest))).updateCumulativeFundings(_payload);
+        IPerpCrucible(Commons.perpCrucible(address(addressManifest))).updateCumulativeFundings(
+            _payload
+        );
     }
 
     /// @notice function for force swapping in the case that a user has core collateral debt
@@ -170,19 +180,23 @@ contract OrderDispatch is EIP712Upgradeable {
     function forceSwap(bytes calldata payload) internal {
         bool coreCollatSwapOrLiquidationSwap = uint8(payload[0]) == 1;
         uint64 offchainDepositCount = uint64(bytes8(payload[1:9]));
-        Structs.MatchedOrder memory forceMatchedOrder = abi.decode(payload[9:], (Structs.MatchedOrder));
+        Structs.MatchedOrder memory forceMatchedOrder =
+            abi.decode(payload[9:], (Structs.MatchedOrder));
         // get the taker order digest and check the signature
         Structs.SingleMatchedOrder memory order;
         // we dont conduct a signature check on the taker
         (order.taker,) = Parser.parseOrderBytes(forceMatchedOrder.taker, true);
         order.takerDigest = getOrderDigest(order.taker);
-        address takerSubAccount = Commons.getSubAccount(order.taker.account, order.taker.subAccountId);
-        bool recentDeposit =
-            offchainDepositCount < ICiao(Commons.ciao(address(addressManifest))).depositCount(takerSubAccount);
+        address takerSubAccount =
+            Commons.getSubAccount(order.taker.account, order.taker.subAccountId);
+        bool recentDeposit = offchainDepositCount
+            < ICiao(Commons.ciao(address(addressManifest))).depositCount(takerSubAccount);
         if (coreCollatSwapOrLiquidationSwap) {
             // if theres a core collateral tag then we check for core collateral debt on the taker
-            if (ICiao(Commons.ciao(address(addressManifest))).coreCollateralDebt(takerSubAccount) > 0 || recentDeposit)
-            {
+            if (
+                ICiao(Commons.ciao(address(addressManifest))).coreCollateralDebt(takerSubAccount)
+                    > 0 || recentDeposit
+            ) {
                 // if there is debt or recent deposit then we execute the swap as ordered
                 _matchOrder(forceMatchedOrder, order);
             } else {
@@ -191,8 +205,9 @@ contract OrderDispatch is EIP712Upgradeable {
         } else {
             // if theres a liquidation request then we check if their health is below maintenance
             if (
-                IFurnace(Commons.furnace(address(addressManifest))).getSubAccountHealth(takerSubAccount, false) < 0
-                    || recentDeposit
+                IFurnace(Commons.furnace(address(addressManifest))).getSubAccountHealth(
+                    takerSubAccount, false
+                ) < 0 || recentDeposit
             ) {
                 // if the health is negative then we execute the swap as ordered
                 _matchOrder(forceMatchedOrder, order);
@@ -200,8 +215,9 @@ contract OrderDispatch is EIP712Upgradeable {
                     // if user has not front ran liquidation
                     // check liquidatee's initial health is zero or below. If above, they have been liquidated for too much
                     if (
-                        IFurnace(Commons.furnace(address(addressManifest))).getSubAccountHealth(takerSubAccount, true)
-                            > 0
+                        IFurnace(Commons.furnace(address(addressManifest))).getSubAccountHealth(
+                            takerSubAccount, true
+                        ) > 0
                     ) revert Errors.LiquidatedTooMuch();
                 }
             } else {
@@ -213,8 +229,11 @@ contract OrderDispatch is EIP712Upgradeable {
     /// @notice function for liquidating a sub account
     /// @dev function can only be accessed by the operator
     function liquidate(bytes calldata payload) internal {
-        (Structs.LiquidateSubAccount memory liqui, bytes memory liquidateSig, uint64 offchainDepositCount) =
-            Parser.parseLiquidateBytes(payload);
+        (
+            Structs.LiquidateSubAccount memory liqui,
+            bytes memory liquidateSig,
+            uint64 offchainDepositCount
+        ) = Parser.parseLiquidateBytes(payload);
         bytes32 digest = getLiquidateDigest(liqui);
         addressManifest.checkInDigestAsUsed(digest);
         if (!checkSignature(liqui.liquidator, liqui.liquidatorSubAccountId, digest, liquidateSig)) {
@@ -229,17 +248,22 @@ contract OrderDispatch is EIP712Upgradeable {
         ) {
             noRecentDeposit = true;
         }
-        ILiquidation(Commons.liquidation(address(addressManifest))).liquidateSubAccount(liqui, noRecentDeposit);
+        ILiquidation(Commons.liquidation(address(addressManifest))).liquidateSubAccount(
+            liqui, noRecentDeposit
+        );
     }
 
     /// @notice function for approving a signer
     /// @dev function can only be accessed by the operator
     function approveSigner(bytes calldata payload) internal {
-        (Structs.ApproveSigner memory approval, bytes memory approvalSig) = Parser.parseApprovedSignerBytes(payload);
+        (Structs.ApproveSigner memory approval, bytes memory approvalSig) =
+            Parser.parseApprovedSignerBytes(payload);
         bytes32 digest = getApprovalDigest(approval);
         addressManifest.checkInDigestAsUsed(digest);
         address recoveredSigner = ECDSA.recover(digest, approvalSig);
-        if ((recoveredSigner == address(0)) || recoveredSigner != approval.account) revert Errors.SignatureInvalid();
+        if ((recoveredSigner == address(0)) || recoveredSigner != approval.account) {
+            revert Errors.SignatureInvalid();
+        }
         addressManifest.approveSigner(
             approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
         );
@@ -254,7 +278,11 @@ contract OrderDispatch is EIP712Upgradeable {
         bytes memory takerSig;
         (order.taker, takerSig) = Parser.parseOrderBytes(orders.taker, false);
         order.takerDigest = getOrderDigest(order.taker);
-        if (!checkSignature(order.taker.account, order.taker.subAccountId, order.takerDigest, takerSig)) {
+        if (
+            !checkSignature(
+                order.taker.account, order.taker.subAccountId, order.takerDigest, takerSig
+            )
+        ) {
             revert Errors.SignatureInvalid();
         }
         _matchOrder(orders, order);
@@ -269,16 +297,19 @@ contract OrderDispatch is EIP712Upgradeable {
     /// @param subAccountId the subAccount to check for an approvedSigner for
     /// @param digest the hashed version of the order
     /// @param signature the EIP712 signature corresponding to the order, signed by the trader
-    function checkSignature(address account, uint8 subAccountId, bytes32 digest, bytes memory signature)
-        public
-        view
-        returns (bool)
-    {
+    function checkSignature(
+        address account,
+        uint8 subAccountId,
+        bytes32 digest,
+        bytes memory signature
+    ) public view returns (bool) {
         address recoveredSigner = ECDSA.recover(digest, signature);
         if ((recoveredSigner != address(0)) && recoveredSigner == account) {
             return true;
         } else {
-            return addressManifest.approvedSigners(Commons.getSubAccount(account, subAccountId), recoveredSigner);
+            return addressManifest.approvedSigners(
+                Commons.getSubAccount(account, subAccountId), recoveredSigner
+            );
         }
     }
 
@@ -306,7 +337,11 @@ contract OrderDispatch is EIP712Upgradeable {
 
     /// @notice function to create the digest or hashed version of the approvedSigner, used for signature validation and storage keys
     /// @param approval the order struct that contains details of the order
-    function getApprovalDigest(Structs.ApproveSigner memory approval) public view returns (bytes32) {
+    function getApprovalDigest(Structs.ApproveSigner memory approval)
+        public
+        view
+        returns (bytes32)
+    {
         return _hashTypedDataV4(
             keccak256(
                 abi.encode(
@@ -323,7 +358,11 @@ contract OrderDispatch is EIP712Upgradeable {
 
     /// @notice function to create the digest or hashed version of the liquidateSubAccount, used for signature validation and storage keys
     /// @param liquidation the order struct that contains details of the order
-    function getLiquidateDigest(Structs.LiquidateSubAccount memory liquidation) public view returns (bytes32) {
+    function getLiquidateDigest(Structs.LiquidateSubAccount memory liquidation)
+        public
+        view
+        returns (bytes32)
+    {
         return _hashTypedDataV4(
             keccak256(
                 abi.encode(
@@ -347,7 +386,12 @@ contract OrderDispatch is EIP712Upgradeable {
         return _hashTypedDataV4(
             keccak256(
                 abi.encode(
-                    keccak256(bytes(DEPOSIT)), depo.account, depo.subAccountId, depo.asset, depo.quantity, depo.nonce
+                    keccak256(bytes(DEPOSIT)),
+                    depo.account,
+                    depo.subAccountId,
+                    depo.asset,
+                    depo.quantity,
+                    depo.nonce
                 )
             )
         );
@@ -373,7 +417,10 @@ contract OrderDispatch is EIP712Upgradeable {
     // Internal
     //////////////////////////////////////
 
-    function _matchOrder(Structs.MatchedOrder memory orders, Structs.SingleMatchedOrder memory order) internal {
+    function _matchOrder(
+        Structs.MatchedOrder memory orders,
+        Structs.SingleMatchedOrder memory order
+    ) internal {
         uint256 makerLength = orders.makers.length;
         uint128 takerQuantityRemaining;
         for (uint256 j; j < makerLength; j++) {
@@ -381,14 +428,23 @@ contract OrderDispatch is EIP712Upgradeable {
             // get the maker order digest and check the maker signature
             (order.maker, makerSig) = Parser.parseOrderBytes(orders.makers[j], false);
             order.makerDigest = getOrderDigest(order.maker);
-            if (!checkSignature(order.maker.account, order.maker.subAccountId, order.makerDigest, makerSig)) {
+            if (
+                !checkSignature(
+                    order.maker.account, order.maker.subAccountId, order.makerDigest, makerSig
+                )
+            ) {
                 revert Errors.SignatureInvalid();
             }
-            (address takerSubAccount, address makerSubAccount, Structs.Product memory product) = _getOrderDetails(order);
-            ICrucible crucible =
-                ICrucible(Commons.crucible(address(addressManifest), instrumentToCrucible[product.productType]));
+            (address takerSubAccount, address makerSubAccount, Structs.Product memory product) =
+                _getOrderDetails(order);
+            ICrucible crucible = ICrucible(
+                Commons.crucible(
+                    address(addressManifest), instrumentToCrucible[product.productType]
+                )
+            );
             // get the actual quantitys, accounting for any partial fills, this can never go below 0, if it does the order check will fail
-            takerQuantityRemaining = order.taker.quantity - crucible.filledQuantitys(order.takerDigest);
+            takerQuantityRemaining =
+                order.taker.quantity - crucible.filledQuantitys(order.takerDigest);
             order.maker.quantity -= crucible.filledQuantitys(order.makerDigest);
             if (!_checkOrder(order.taker) || !_checkOrder(order.maker)) {
                 revert Errors.OrderCheckFailed();
@@ -438,7 +494,9 @@ contract OrderDispatch is EIP712Upgradeable {
                 revert Errors.ProductInvalid();
             }
             // handle filled quantitys
-            crucible.updateFilledQuantity(order.takerDigest, order.makerDigest, uint128(baseQuantity));
+            crucible.updateFilledQuantity(
+                order.takerDigest, order.makerDigest, uint128(baseQuantity)
+            );
             // emit event to show order matched
             emit Events.OrderMatched(order.takerDigest, order.makerDigest);
         }
@@ -451,8 +509,9 @@ contract OrderDispatch is EIP712Upgradeable {
         // - compute the quantitys based on the maker price
         uint256 quoteQuantity = BasicMath.mul(o.baseQuantity, o.executionPrice);
         // - for charging the fee we deduct the quantity from the balance update from both sides
-        Structs.Product memory product =
-            IProductCatalogue(Commons.productCatalogue(address(addressManifest))).products(o.productId);
+        Structs.Product memory product = IProductCatalogue(
+            Commons.productCatalogue(address(addressManifest))
+        ).products(o.productId);
         uint256 takerFee;
         uint256 makerFee;
         uint256 sequencerFee;
@@ -481,14 +540,16 @@ contract OrderDispatch is EIP712Upgradeable {
     }
 
     function _matchPerpOrder(Structs.OrderMatchParams memory o) internal {
-        Structs.NewPosition memory makerPos = Structs.NewPosition(o.executionPrice, o.baseQuantity, !o.takerIsBuy);
+        Structs.NewPosition memory makerPos =
+            Structs.NewPosition(o.executionPrice, o.baseQuantity, !o.takerIsBuy);
         ICiao ciao = ICiao(Commons.ciao(address(addressManifest)));
         (int256 takerRealisedPnl, int256 makerRealisedPnl) = IPerpCrucible(
             Commons.perpCrucible(address(addressManifest))
         ).updatePosition(o.takerSubAccount, o.makerSubAccount, o.productId, makerPos);
         // calculate the fee to be charged to each isBuy then decrement the maker and taker realisedPnl
-        Structs.Product memory product =
-            IProductCatalogue(Commons.productCatalogue(address(addressManifest))).products(o.productId);
+        Structs.Product memory product = IProductCatalogue(
+            Commons.productCatalogue(address(addressManifest))
+        ).products(o.productId);
         uint256 notional = BasicMath.mul(o.baseQuantity, o.executionPrice);
         int256 takerFee = int256(BasicMath.mul(notional, product.takerFee));
         int256 makerFee = int256(BasicMath.mul(notional, product.makerFee));
@@ -516,14 +577,17 @@ contract OrderDispatch is EIP712Upgradeable {
         returns (address, address, Structs.Product memory)
     {
         // get the sub accounts for the accounts
-        address takerSubAccount = Commons.getSubAccount(order.taker.account, order.taker.subAccountId);
-        address makerSubAccount = Commons.getSubAccount(order.maker.account, order.maker.subAccountId);
+        address takerSubAccount =
+            Commons.getSubAccount(order.taker.account, order.taker.subAccountId);
+        address makerSubAccount =
+            Commons.getSubAccount(order.maker.account, order.maker.subAccountId);
         if (order.maker.productId != order.taker.productId) {
             revert Errors.ProductIdMismatch();
         }
         // we need to get the class of the instrument
-        Structs.Product memory product =
-            IProductCatalogue(Commons.productCatalogue(address(addressManifest))).products(order.maker.productId);
+        Structs.Product memory product = IProductCatalogue(
+            Commons.productCatalogue(address(addressManifest))
+        ).products(order.maker.productId);
         if (product.productType == 0) revert Errors.ProductNotSet();
         return (takerSubAccount, makerSubAccount, product);
     }

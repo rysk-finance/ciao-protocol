@@ -8,28 +8,16 @@ interface Events {
     ////////////////////////
 
     event Deposit(
-        address indexed account,
-        uint8 indexed subAccountId,
-        address indexed asset,
-        uint256 quantity
+        address indexed account, uint8 indexed subAccountId, address indexed asset, uint256 quantity
     );
     event RequestWithdrawal(
-        address indexed account,
-        uint8 indexed subAccountId,
-        address indexed asset,
-        uint256 quantity
+        address indexed account, uint8 indexed subAccountId, address indexed asset, uint256 quantity
     );
     event ExecuteWithdrawal(
-        address indexed account,
-        uint8 indexed subAccountId,
-        address indexed asset,
-        uint256 quantity
+        address indexed account, uint8 indexed subAccountId, address indexed asset, uint256 quantity
     );
     event BalanceChanged(
-        address indexed subAccount,
-        address indexed asset,
-        int256 balanceBefore,
-        int256 balanceAfter
+        address indexed subAccount, address indexed asset, int256 balanceBefore, int256 balanceAfter
     );
 
     event FeeRecipientChanged(address feeRecipient);
@@ -59,15 +47,9 @@ interface Events {
     // Product Catalogue Events
     ////////////////////////////
 
-    event ProductTradeabilityChanged(
-        uint32 indexed productId,
-        bool isProductTradeable
-    );
+    event ProductTradeabilityChanged(uint32 indexed productId, bool isProductTradeable);
     event ProductFeesChanged(
-        uint32 indexed productId,
-        uint256 takerFee,
-        uint256 makerFee,
-        bool isMakerRebate
+        uint32 indexed productId, uint256 takerFee, uint256 makerFee, bool isMakerRebate
     );
     event ProductSet(
         uint32 indexed productId,
@@ -79,9 +61,7 @@ interface Events {
         bool isMakerRebate
     );
     event BaseAssetQuoteAssetSpotIdSet(
-        address indexed baseAsset,
-        address indexed quoteAsset,
-        uint32 productId
+        address indexed baseAsset, address indexed quoteAsset, uint32 productId
     );
 
     // Furnace Events
@@ -102,22 +82,18 @@ interface Events {
         uint64 maintenanceShortWeight
     );
 
-    event SpreadPenaltySet(
-        address indexed spotAsset,
-        uint64 initial,
-        uint64 maintenance
-    );
+    event SpreadPenaltySet(address indexed spotAsset, uint64 initial, uint64 maintenance);
     event BaseAssetQuotePerpSet(address indexed spotAddress, uint32 productId);
 
     // Liquidation Events
     //////////////////////////////////////
 
     event RequiresDispatchCallSet(bool requiresDispatchCall);
-    event Liquidated(
+    event Liquidated( // for a spread this is the perpId
         address liquidator,
         address liquidatee,
         uint8 mode,
-        uint32 productId, // for a spread this is the perpId
+        uint32 productId,
         uint256 quantity,
         uint256 liquidationPrice,
         uint256 liquidationFees

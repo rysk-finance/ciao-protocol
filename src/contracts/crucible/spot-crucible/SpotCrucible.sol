@@ -16,7 +16,6 @@ import "lib/openzeppelin-contracts/contracts/proxy/utils/Initializable.sol";
 ///         Mk 0.0.0
 
 contract SpotCrucible is Crucible, Initializable {
-
     function initialize(address _addressManifest) external initializer {
         __Crucible_init(_addressManifest);
     }

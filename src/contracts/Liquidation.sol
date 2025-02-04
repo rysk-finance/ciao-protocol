@@ -80,10 +80,14 @@ contract Liquidation is AccessControl {
     /// -- productId: the ID of the position (nb. for spreads this is the perp ID)
     /// -- quantity: quantity of the position to liquidate, denominated in base asset quantity/num. contracts
     /// -- nonce: unique number
-    function liquidateSubAccount(Structs.LiquidateSubAccount calldata txn, bool noRecentDeposit) external {
+    function liquidateSubAccount(Structs.LiquidateSubAccount calldata txn, bool noRecentDeposit)
+        external
+    {
         _isOrderDispatch();
-        address liquidatorSubAccount = Commons.getSubAccount(txn.liquidator, txn.liquidatorSubAccountId);
-        address liquidateeSubAccount = Commons.getSubAccount(txn.liquidatee, txn.liquidateeSubAccountId);
+        address liquidatorSubAccount =
+            Commons.getSubAccount(txn.liquidator, txn.liquidatorSubAccountId);
+        address liquidateeSubAccount =
+            Commons.getSubAccount(txn.liquidatee, txn.liquidateeSubAccountId);
         if (liquidatorSubAccount == liquidateeSubAccount) {
             revert Errors.LiquidatorCanNotBeLiquidatee();
         }
@@ -135,8 +139,9 @@ contract Liquidation is AccessControl {
     /// @notice validates some properties before calling _handleSpotLiquidation
     function _liquidateSpot(Structs.LiquidateSubAccount calldata txn) internal {
         address spotAssetAddress = _productCatalogue().productIdToBaseAsset(txn.productId);
-        uint256 spotBalance =
-            _ciao().balances(Commons.getSubAccount(txn.liquidatee, txn.liquidateeSubAccountId), spotAssetAddress);
+        uint256 spotBalance = _ciao().balances(
+            Commons.getSubAccount(txn.liquidatee, txn.liquidateeSubAccountId), spotAssetAddress
+        );
         // can not liquidate core collateral
         if (txn.productId == 1) revert Errors.CanNotLiquidateCoreCollateral();
         _validateLiquidationQuantity(spotBalance, txn.quantity);
@@ -146,8 +151,10 @@ contract Liquidation is AccessControl {
     /// @notice validates some properties then liquidates spot and perp components separately
     /// @dev calls _handleSpotLiquidation(), _handlePerpLiquidation() with isPartOfSpread == true
     function _liquidateSpread(Structs.LiquidateSubAccount calldata txn) internal {
-        address liquidateeSubAccount = Commons.getSubAccount(txn.liquidatee, txn.liquidateeSubAccountId);
-        Structs.PositionState memory perpPos = _perpCrucible().subAccountPositions(txn.productId, liquidateeSubAccount);
+        address liquidateeSubAccount =
+            Commons.getSubAccount(txn.liquidatee, txn.liquidateeSubAccountId);
+        Structs.PositionState memory perpPos =
+            _perpCrucible().subAccountPositions(txn.productId, liquidateeSubAccount);
         address spotAssetAddress = _productCatalogue().productIdToBaseAsset(txn.productId);
         uint256 spotBalance = _ciao().balances(liquidateeSubAccount, spotAssetAddress);
         _validateLiquidationQuantity(perpPos.quantity, txn.quantity);
@@ -173,10 +180,13 @@ contract Liquidation is AccessControl {
         address spotAssetAddress,
         bool isPartOfSpread
     ) internal {
-        address liquidatorSubAccount = Commons.getSubAccount(txn.liquidator, txn.liquidatorSubAccountId);
-        address liquidateeSubAccount = Commons.getSubAccount(txn.liquidatee, txn.liquidateeSubAccountId);
-        uint32 spotProductId =
-            _productCatalogue().baseAssetQuoteAssetSpotIds(spotAssetAddress, _ciao().coreCollateralAddress());
+        address liquidatorSubAccount =
+            Commons.getSubAccount(txn.liquidator, txn.liquidatorSubAccountId);
+        address liquidateeSubAccount =
+            Commons.getSubAccount(txn.liquidatee, txn.liquidateeSubAccountId);
+        uint32 spotProductId = _productCatalogue().baseAssetQuoteAssetSpotIds(
+            spotAssetAddress, _ciao().coreCollateralAddress()
+        );
         Structs.LiquidationVars memory vars;
         vars.oraclePrice = _furnace().prices(spotProductId);
         if (isPartOfSpread) {
@@ -193,7 +203,8 @@ contract Liquidation is AccessControl {
             );
         }
         vars.liquidationPayment = vars.liquidationPrice.mul(txn.quantity);
-        vars.liquidationFees = (vars.oraclePrice - vars.liquidationPrice).mul(liquidationFeeFraction).mul(txn.quantity);
+        vars.liquidationFees =
+            (vars.oraclePrice - vars.liquidationPrice).mul(liquidationFeeFraction).mul(txn.quantity);
         ICiao ciao = _ciao();
         ciao.incrementFee(ciao.coreCollateralAddress(), vars.liquidationFees, ciao.insurance());
         ciao.updateBalance(
@@ -223,11 +234,15 @@ contract Liquidation is AccessControl {
     /// @notice liquidates perp position at the calculated liquidation price
     /// @notice liquidation price is calculated differently if part of a spread
     /// @notice funnels a portion of the liquidation profits into the insurance fund
-    function _handlePerpLiquidation(Structs.LiquidateSubAccount calldata txn, bool isLong, bool isPartOfSpread)
-        internal
-    {
-        address liquidatorSubAccount = Commons.getSubAccount(txn.liquidator, txn.liquidatorSubAccountId);
-        address liquidateeSubAccount = Commons.getSubAccount(txn.liquidatee, txn.liquidateeSubAccountId);
+    function _handlePerpLiquidation(
+        Structs.LiquidateSubAccount calldata txn,
+        bool isLong,
+        bool isPartOfSpread
+    ) internal {
+        address liquidatorSubAccount =
+            Commons.getSubAccount(txn.liquidator, txn.liquidatorSubAccountId);
+        address liquidateeSubAccount =
+            Commons.getSubAccount(txn.liquidatee, txn.liquidateeSubAccountId);
         Structs.LiquidationVars memory vars;
         vars.oraclePrice = _furnace().prices(txn.productId);
 
@@ -243,7 +258,9 @@ contract Liquidation is AccessControl {
 
         vars.liquidationPayment = vars.liquidationPrice.mul(txn.quantity);
         vars.liquidationFees = (
-            isLong ? (vars.oraclePrice - vars.liquidationPrice) : (vars.liquidationPrice - vars.oraclePrice)
+            isLong
+                ? (vars.oraclePrice - vars.liquidationPrice)
+                : (vars.liquidationPrice - vars.oraclePrice)
         ).mul(liquidationFeeFraction).mul(txn.quantity);
         ICiao ciao = _ciao();
         ciao.incrementFee(ciao.coreCollateralAddress(), vars.liquidationFees, ciao.insurance());
@@ -253,7 +270,9 @@ contract Liquidation is AccessControl {
             txn.productId,
             Structs.NewPosition(vars.liquidationPrice, txn.quantity, !isLong)
         );
-        ciao.settleCoreCollateral(liquidatorSubAccount, liquidatorPnl - int256(vars.liquidationFees));
+        ciao.settleCoreCollateral(
+            liquidatorSubAccount, liquidatorPnl - int256(vars.liquidationFees)
+        );
         ciao.settleCoreCollateral(liquidateeSubAccount, liquidateePnl);
 
         emit Events.Liquidated(
@@ -268,7 +287,10 @@ contract Liquidation is AccessControl {
     }
 
     /// @notice validates that the liquidation quantity is above zero and not more than the liquidatee's pos size
-    function _validateLiquidationQuantity(uint256 existingPosSize, uint256 liquidationQuantity) internal pure {
+    function _validateLiquidationQuantity(uint256 existingPosSize, uint256 liquidationQuantity)
+        internal
+        pure
+    {
         if (existingPosSize == 0) revert Errors.NoPositionExistsForId();
         if (liquidationQuantity == 0 || liquidationQuantity > existingPosSize) {
             revert Errors.InvalidLiquidationSize();
@@ -286,11 +308,11 @@ contract Liquidation is AccessControl {
         return oraclePrice.mul(weight + liqPriceNumerator).div(liqPriceDenominator);
     }
 
-    function _getSpreadLiquidationPrice(address spotComponentAddress, uint256 oraclePrice, bool isSpot)
-        internal
-        view
-        returns (uint256 liquidationPrice)
-    {
+    function _getSpreadLiquidationPrice(
+        address spotComponentAddress,
+        uint256 oraclePrice,
+        bool isSpot
+    ) internal view returns (uint256 liquidationPrice) {
         uint64 spreadPenalty = _furnace().getSpreadPenalty(spotComponentAddress).maintenance;
         if (isSpot) {
             return oraclePrice.mul(1e18 - spreadPenalty);
@@ -308,7 +330,8 @@ contract Liquidation is AccessControl {
         uint256 numPerpPositions = perpPositionIds.length;
         if (numPerpPositions == 0) return false;
         for (uint256 i = 0; i < numPerpPositions; i++) {
-            Structs.PositionState memory perpPos = _getSingleNakedPerpPosition(uint32(perpPositionIds[i]), subAccount);
+            Structs.PositionState memory perpPos =
+                _getSingleNakedPerpPosition(uint32(perpPositionIds[i]), subAccount);
             if (perpPos.quantity == 0) continue;
             return true;
         }
@@ -320,7 +343,8 @@ contract Liquidation is AccessControl {
         view
         returns (Structs.PositionState memory)
     {
-        Structs.PositionState memory perpPosition = _perpCrucible().subAccountPositions(uint32(perpId), subAccount);
+        Structs.PositionState memory perpPosition =
+            _perpCrucible().subAccountPositions(uint32(perpId), subAccount);
         if (!perpPosition.isLong) {
             // if short, get spot balance to determine spread quantity
             address spotAssetAddress = _productCatalogue().productIdToBaseAsset(perpId);

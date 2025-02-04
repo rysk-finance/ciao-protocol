@@ -26,8 +26,7 @@ contract PerpCrucible is Crucible, Initializable {
     //////////////////////////////////////
 
     // mapping from product id to subaccount to Position
-    mapping(uint32 => mapping(address => Structs.PositionState))
-        public subAccountPositions;
+    mapping(uint32 => mapping(address => Structs.PositionState)) public subAccountPositions;
 
     // mapping from productId to current cumulative funding
     mapping(uint32 => int256) public currentCumFunding;
@@ -35,7 +34,7 @@ contract PerpCrucible is Crucible, Initializable {
     function initialize(address _addressManifest) external initializer {
         __Crucible_init(_addressManifest);
     }
-    
+
     // External - Access Controlled
     //////////////////////////////////////
 
@@ -47,8 +46,8 @@ contract PerpCrucible is Crucible, Initializable {
         _isOrderDispatch();
         // look at the length of the byte array to determine how many funding rates are being updated
         if (fundingData.length % 36 != 0) revert Errors.OrderByteLengthInvalid();
-        uint fundingDataLen = fundingData.length;
-        for (uint i; i < fundingDataLen; ) {
+        uint256 fundingDataLen = fundingData.length;
+        for (uint256 i; i < fundingDataLen;) {
             uint32 productId;
             int256 fundingDiff;
             uint256 pidOffset = i + 4;
@@ -84,16 +83,10 @@ contract PerpCrucible is Crucible, Initializable {
             takerSubAccount,
             productId,
             Structs.NewPosition(
-                makerPosition.executionPrice,
-                makerPosition.quantity,
-                !makerPosition.isLong
+                makerPosition.executionPrice, makerPosition.quantity, !makerPosition.isLong
             )
         );
-        makerRealisedPnl = _updatePosition(
-            makerSubAccount,
-            productId,
-            makerPosition
-        );
+        makerRealisedPnl = _updatePosition(makerSubAccount, productId, makerPosition);
     }
 
     // Internal
@@ -118,35 +111,29 @@ contract PerpCrucible is Crucible, Initializable {
             // if cumFunding has increased, longs will have negative funding pnl, and vice versa
             realisedPnl = (
                 existingPosition.isLong
-                    ? (existingPosition.initCumFunding -
-                        currentCumFunding[productId])
-                    : (currentCumFunding[productId] -
-                        existingPosition.initCumFunding)
+                    ? (existingPosition.initCumFunding - currentCumFunding[productId])
+                    : (currentCumFunding[productId] - existingPosition.initCumFunding)
             ).mul(int256(existingPosition.quantity));
             if (existingPosition.isLong == position.isLong) {
                 // add to existing position
                 // update avgEntryPrice and quantity of position
                 // no pnl is realised here
-                uint newAvgEntryPrice = (existingPosition.avgEntryPrice.mul(
-                    existingPosition.quantity
-                ) + position.executionPrice.mul(position.quantity)).div(
-                        existingPosition.quantity + position.quantity
-                    );
-                subAccountPositions[productId][subAccount] = Structs
-                    .PositionState(
-                        newAvgEntryPrice,
-                        existingPosition.quantity + position.quantity,
-                        position.isLong,
-                        currentCumFunding[productId]
-                    );
+                uint256 newAvgEntryPrice = (
+                    existingPosition.avgEntryPrice.mul(existingPosition.quantity)
+                        + position.executionPrice.mul(position.quantity)
+                ).div(existingPosition.quantity + position.quantity);
+                subAccountPositions[productId][subAccount] = Structs.PositionState(
+                    newAvgEntryPrice,
+                    existingPosition.quantity + position.quantity,
+                    position.isLong,
+                    currentCumFunding[productId]
+                );
             } else if (existingPosition.quantity >= position.quantity) {
                 realisedPnl += (
                     existingPosition.isLong
-                        ? (int(position.executionPrice) -
-                            int(existingPosition.avgEntryPrice))
-                        : (int(existingPosition.avgEntryPrice) -
-                            int(position.executionPrice))
-                ).mul(int(position.quantity));
+                        ? (int256(position.executionPrice) - int256(existingPosition.avgEntryPrice))
+                        : (int256(existingPosition.avgEntryPrice) - int256(position.executionPrice))
+                ).mul(int256(position.quantity));
                 if (existingPosition.quantity == position.quantity) {
                     // close position entirely
                     // realise all pnl and remove position from state
@@ -157,13 +144,12 @@ contract PerpCrucible is Crucible, Initializable {
                     // reduce position size but is not flipping long/short side
                     // realise pnl proportional to quantity of position being closed
                     // reduce the position quantity
-                    subAccountPositions[productId][subAccount] = Structs
-                        .PositionState(
-                            existingPosition.avgEntryPrice,
-                            existingPosition.quantity - position.quantity,
-                            existingPosition.isLong,
-                            currentCumFunding[productId]
-                        );
+                    subAccountPositions[productId][subAccount] = Structs.PositionState(
+                        existingPosition.avgEntryPrice,
+                        existingPosition.quantity - position.quantity,
+                        existingPosition.isLong,
+                        currentCumFunding[productId]
+                    );
                 }
             } else {
                 // existingPosition.quantity < position.quantity
@@ -172,18 +158,15 @@ contract PerpCrucible is Crucible, Initializable {
                 // create new position on opposite long/short side with any leftover size
                 realisedPnl += (
                     existingPosition.isLong
-                        ? (int(position.executionPrice) -
-                            int(existingPosition.avgEntryPrice))
-                        : (int(existingPosition.avgEntryPrice) -
-                            int(position.executionPrice))
-                ).mul(int(existingPosition.quantity));
-                subAccountPositions[productId][subAccount] = Structs
-                    .PositionState(
-                        position.executionPrice,
-                        position.quantity - existingPosition.quantity,
-                        position.isLong,
-                        currentCumFunding[productId]
-                    );
+                        ? (int256(position.executionPrice) - int256(existingPosition.avgEntryPrice))
+                        : (int256(existingPosition.avgEntryPrice) - int256(position.executionPrice))
+                ).mul(int256(existingPosition.quantity));
+                subAccountPositions[productId][subAccount] = Structs.PositionState(
+                    position.executionPrice,
+                    position.quantity - existingPosition.quantity,
+                    position.isLong,
+                    currentCumFunding[productId]
+                );
             }
         } else {
             // no existing position for this asset exists
@@ -198,26 +181,25 @@ contract PerpCrucible is Crucible, Initializable {
             openPositionIds[subAccount].add(productId);
         }
         emit Events.PerpPositionUpdated(
-            subAccount,
-            productId,
-            existingPosition,
-            subAccountPositions[productId][subAccount]
+            subAccount, productId, existingPosition, subAccountPositions[productId][subAccount]
         );
     }
 
     // Basic Getters
     //////////////////////////////////////
-    function getSubAccountPosition(
-        uint32 productId,
-        address subAccount
-    ) external view returns (Structs.PositionState memory) {
+    function getSubAccountPosition(uint32 productId, address subAccount)
+        external
+        view
+        returns (Structs.PositionState memory)
+    {
         return subAccountPositions[productId][subAccount];
     }
 
-    function isPositionOpenForId(
-        address subAccount,
-        uint32 productId
-    ) external view returns (bool) {
+    function isPositionOpenForId(address subAccount, uint32 productId)
+        external
+        view
+        returns (bool)
+    {
         return openPositionIds[subAccount].contains(productId);
     }
 }
