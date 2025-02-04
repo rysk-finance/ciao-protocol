@@ -14,21 +14,10 @@ contract CiaoBaseTest is Base_Test {
         deployCiao();
         address newCiaoImpl = address(new Ciao());
         ciaoProxyAdmin.upgradeAndCall(
-            ITransparentUpgradeableProxy(address(ciaoProxy)),
-            newCiaoImpl,
-            bytes("")
+            ITransparentUpgradeableProxy(address(ciaoProxy)), newCiaoImpl, bytes("")
         );
         assertEq(
-            address(
-                uint160(
-                    uint256(
-                        vm.load(
-                            address(ciaoProxy),
-                            ERC1967Utils.IMPLEMENTATION_SLOT
-                        )
-                    )
-                )
-            ),
+            address(uint160(uint256(vm.load(address(ciaoProxy), ERC1967Utils.IMPLEMENTATION_SLOT)))),
             newCiaoImpl
         );
     }
@@ -37,53 +26,26 @@ contract CiaoBaseTest is Base_Test {
         validateAssets();
         usdc.approve(address(ciao), defaults.usdcDepositQuantity());
         address subAccount = Commons.getSubAccount(users.gov, 0);
-        expectCallToTransferFrom(
-            users.gov,
-            address(ciao),
-            defaults.usdcDepositQuantity()
-        );
+        expectCallToTransferFrom(users.gov, address(ciao), defaults.usdcDepositQuantity());
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             subAccount,
             address(usdc),
             int256(ciao.balances(subAccount, address(usdc))),
-            int256(ciao.balances(subAccount, address(usdc))) +
-                int256(
-                    Commons.convertToE18(
-                        defaults.usdcDepositQuantity(),
-                        usdc.decimals()
-                    )
-                )
+            int256(ciao.balances(subAccount, address(usdc)))
+                + int256(Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals()))
         );
         vm.expectEmit(address(ciao));
-        emit Events.Deposit(
-            users.gov,
-            0,
-            address(usdc),
-            defaults.usdcDepositQuantity()
-        );
-        ciao.deposit(
-            users.gov,
-            0,
-            defaults.usdcDepositQuantity(),
-            address(usdc)
-        );
+        emit Events.Deposit(users.gov, 0, address(usdc), defaults.usdcDepositQuantity());
+        ciao.deposit(users.gov, 0, defaults.usdcDepositQuantity(), address(usdc));
         assertEq(
             ciao.balances(subAccount, address(usdc)),
-            Commons.convertToE18(
-                defaults.usdcDepositQuantity(),
-                usdc.decimals()
-            )
+            Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals())
         );
         assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(usdc)));
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0),
-            address(usdc)
-        );
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(usdc));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 1);
-        address[] memory subAccountAssets = ciao.getSubAccountAssets(
-            subAccount
-        );
+        address[] memory subAccountAssets = ciao.getSubAccountAssets(subAccount);
         assertEq(subAccountAssets[0], address(usdc));
         assertEq(subAccountAssets.length, 1);
         assertEq(ciao.depositCount(subAccount), 1);
@@ -92,21 +54,10 @@ contract CiaoBaseTest is Base_Test {
     function test_Happy_ProxyAdmin_Can_Upgrade() public {
         address newCiaoImpl = address(new Ciao());
         ciaoProxyAdmin.upgradeAndCall(
-            ITransparentUpgradeableProxy(address(ciaoProxy)),
-            newCiaoImpl,
-            bytes("")
+            ITransparentUpgradeableProxy(address(ciaoProxy)), newCiaoImpl, bytes("")
         );
         assertEq(
-            address(
-                uint160(
-                    uint256(
-                        vm.load(
-                            address(ciaoProxy),
-                            ERC1967Utils.IMPLEMENTATION_SLOT
-                        )
-                    )
-                )
-            ),
+            address(uint160(uint256(vm.load(address(ciaoProxy), ERC1967Utils.IMPLEMENTATION_SLOT)))),
             newCiaoImpl
         );
     }
@@ -126,56 +77,30 @@ contract CiaoBaseTest is Base_Test {
         assertEq(ciao.balances(subAccount, address(usdc)), 0);
         assertEq(ciao.coreCollateralDebt(subAccount), uint256(-debtQuantity));
         usdc.approve(address(ciao), defaults.usdcDepositQuantity());
-        expectCallToTransferFrom(
-            users.gov,
-            address(ciao),
-            defaults.usdcDepositQuantity()
-        );
+        expectCallToTransferFrom(users.gov, address(ciao), defaults.usdcDepositQuantity());
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             subAccount,
             address(usdc),
-            int256(ciao.balances(subAccount, address(usdc))) -
-                int256(ciao.coreCollateralDebt(subAccount)),
-            int256(ciao.balances(subAccount, address(usdc))) -
-                int256(ciao.coreCollateralDebt(subAccount)) +
-                int256(
-                    Commons.convertToE18(
-                        defaults.usdcDepositQuantity(),
-                        usdc.decimals()
-                    )
-                )
+            int256(ciao.balances(subAccount, address(usdc)))
+                - int256(ciao.coreCollateralDebt(subAccount)),
+            int256(ciao.balances(subAccount, address(usdc)))
+                - int256(ciao.coreCollateralDebt(subAccount))
+                + int256(Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals()))
         );
         vm.expectEmit(address(ciao));
-        emit Events.Deposit(
-            users.gov,
-            0,
-            address(usdc),
-            defaults.usdcDepositQuantity()
-        );
-        ciao.deposit(
-            users.gov,
-            0,
-            defaults.usdcDepositQuantity(),
-            address(usdc)
-        );
+        emit Events.Deposit(users.gov, 0, address(usdc), defaults.usdcDepositQuantity());
+        ciao.deposit(users.gov, 0, defaults.usdcDepositQuantity(), address(usdc));
         assertEq(
             ciao.balances(subAccount, address(usdc)),
-            Commons.convertToE18(
-                defaults.usdcDepositQuantity(),
-                usdc.decimals()
-            ) - (uint256(-debtQuantity))
+            Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals())
+                - (uint256(-debtQuantity))
         );
         assertEq(ciao.coreCollateralDebt(subAccount), 0);
         assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(usdc)));
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0),
-            address(usdc)
-        );
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(usdc));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 1);
-        address[] memory subAccountAssets = ciao.getSubAccountAssets(
-            subAccount
-        );
+        address[] memory subAccountAssets = ciao.getSubAccountAssets(subAccount);
         assertEq(subAccountAssets[0], address(usdc));
         assertEq(subAccountAssets.length, 1);
         assertEq(ciao.depositCount(subAccount), 1);
@@ -202,11 +127,11 @@ contract CiaoBaseTest is Base_Test {
         emit Events.BalanceChanged(
             subAccount,
             address(usdc),
-            int256(ciao.balances(subAccount, address(usdc))) -
-                int256(ciao.coreCollateralDebt(subAccount)),
-            int256(ciao.balances(subAccount, address(usdc))) -
-                int256(ciao.coreCollateralDebt(subAccount)) +
-                int256(Commons.convertToE18(depositQuantity, usdc.decimals()))
+            int256(ciao.balances(subAccount, address(usdc)))
+                - int256(ciao.coreCollateralDebt(subAccount)),
+            int256(ciao.balances(subAccount, address(usdc)))
+                - int256(ciao.coreCollateralDebt(subAccount))
+                + int256(Commons.convertToE18(depositQuantity, usdc.decimals()))
         );
         vm.expectEmit(address(ciao));
         emit Events.Deposit(users.gov, 0, address(usdc), depositQuantity);
@@ -215,14 +140,9 @@ contract CiaoBaseTest is Base_Test {
         assertEq(ciao.balances(subAccount, address(usdc)), 0);
         assertEq(ciao.coreCollateralDebt(subAccount), 500e18);
         assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(usdc)));
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0),
-            address(usdc)
-        );
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(usdc));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 1);
-        address[] memory subAccountAssets = ciao.getSubAccountAssets(
-            subAccount
-        );
+        address[] memory subAccountAssets = ciao.getSubAccountAssets(subAccount);
         assertEq(subAccountAssets[0], address(usdc));
         assertEq(subAccountAssets.length, 1);
     }
@@ -262,42 +182,26 @@ contract CiaoBaseTest is Base_Test {
         weth.approve(address(ciao), defaults.wethDepositQuantity());
         address subAccount = Commons.getSubAccount(users.gov, 1);
         expectCallToTransferFromToken(
-            weth,
-            users.gov,
-            address(ciao),
-            defaults.wethDepositQuantity()
+            weth, users.gov, address(ciao), defaults.wethDepositQuantity()
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             subAccount,
             address(weth),
             int256(ciao.balances(subAccount, address(weth))),
-            int256(ciao.balances(subAccount, address(weth))) +
-                int256(defaults.wethDepositQuantity())
+            int256(ciao.balances(subAccount, address(weth)))
+                + int256(defaults.wethDepositQuantity())
         );
         vm.expectEmit(address(ciao));
-        emit Events.Deposit(
-            users.gov,
-            1,
-            address(weth),
-            defaults.wethDepositQuantity()
-        );
-        ciao.deposit(
-            users.gov,
-            1,
-            defaults.wethDepositQuantity(),
-            address(weth)
-        );
+        emit Events.Deposit(users.gov, 1, address(weth), defaults.wethDepositQuantity());
+        ciao.deposit(users.gov, 1, defaults.wethDepositQuantity(), address(weth));
         assertEq(ciao.depositCount(subAccount), 1);
         assertEq(
             ciao.balances(subAccount, address(weth)),
             Commons.convertToE18(defaults.wethDepositQuantity(), 18)
         );
         assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(weth)));
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0),
-            address(weth)
-        );
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(weth));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 1);
     }
 
@@ -305,90 +209,212 @@ contract CiaoBaseTest is Base_Test {
         validateAssets();
         usdc.approve(address(ciao), defaults.usdcDepositQuantity());
         address subAccount = Commons.getSubAccount(users.gov, 0);
-        expectCallToTransferFrom(
-            users.gov,
-            address(ciao),
-            defaults.usdcDepositQuantity()
-        );
+        expectCallToTransferFrom(users.gov, address(ciao), defaults.usdcDepositQuantity());
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             subAccount,
             address(usdc),
             int256(ciao.balances(subAccount, address(usdc))),
-            int256(ciao.balances(subAccount, address(usdc))) +
-                int256(
-                    Commons.convertToE18(
-                        defaults.usdcDepositQuantity(),
-                        usdc.decimals()
-                    )
-                )
+            int256(ciao.balances(subAccount, address(usdc)))
+                + int256(Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals()))
         );
         vm.expectEmit(address(ciao));
-        emit Events.Deposit(
-            users.gov,
-            0,
-            address(usdc),
-            defaults.usdcDepositQuantity()
-        );
-        ciao.deposit(
-            users.gov,
-            0,
-            defaults.usdcDepositQuantity(),
-            address(usdc)
-        );
+        emit Events.Deposit(users.gov, 0, address(usdc), defaults.usdcDepositQuantity());
+        ciao.deposit(users.gov, 0, defaults.usdcDepositQuantity(), address(usdc));
         assertEq(ciao.depositCount(subAccount), 1);
         assertEq(
             ciao.balances(subAccount, address(usdc)),
-            Commons.convertToE18(
-                defaults.usdcDepositQuantity(),
-                usdc.decimals()
-            )
+            Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals())
         );
         assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(usdc)));
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0),
-            address(usdc)
-        );
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(usdc));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 1);
         weth.approve(address(ciao), defaults.wethDepositQuantity());
         expectCallToTransferFromToken(
-            weth,
-            users.gov,
-            address(ciao),
-            defaults.wethDepositQuantity()
+            weth, users.gov, address(ciao), defaults.wethDepositQuantity()
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             subAccount,
             address(weth),
             int256(ciao.balances(subAccount, address(weth))),
-            int256(ciao.balances(subAccount, address(weth))) +
-                int256(defaults.wethDepositQuantity())
+            int256(ciao.balances(subAccount, address(weth)))
+                + int256(defaults.wethDepositQuantity())
         );
         vm.expectEmit(address(ciao));
-        emit Events.Deposit(
-            users.gov,
-            0,
-            address(weth),
-            defaults.wethDepositQuantity()
-        );
-        ciao.deposit(
-            users.gov,
-            0,
-            defaults.wethDepositQuantity(),
-            address(weth)
-        );
+        emit Events.Deposit(users.gov, 0, address(weth), defaults.wethDepositQuantity());
+        ciao.deposit(users.gov, 0, defaults.wethDepositQuantity(), address(weth));
         assertEq(ciao.depositCount(subAccount), 2);
         assertEq(
             ciao.balances(subAccount, address(weth)),
             Commons.convertToE18(defaults.wethDepositQuantity(), 18)
         );
         assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(weth)));
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 1),
-            address(weth)
-        );
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 1), address(weth));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 2);
+    }
+
+    function test_Happy_Donate_Usdc() public {
+        validateAssets();
+        usdc.approve(address(ciao), defaults.usdcDepositQuantity());
+        address subAccount = Commons.getSubAccount(users.alice, 0);
+        expectCallToTransferFrom(users.gov, address(ciao), defaults.usdcDepositQuantity());
+        vm.expectEmit(address(ciao));
+        emit Events.BalanceChanged(
+            subAccount,
+            address(usdc),
+            int256(ciao.balances(subAccount, address(usdc))),
+            int256(ciao.balances(subAccount, address(usdc)))
+                + int256(Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals()))
+        );
+        vm.expectEmit(address(ciao));
+        emit Events.Deposit(users.alice, 0, address(usdc), defaults.usdcDepositQuantity());
+        ciao.donate(users.alice, 0, defaults.usdcDepositQuantity(), address(usdc));
+        assertEq(
+            ciao.balances(subAccount, address(usdc)),
+            Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals())
+        );
+        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(usdc)));
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(usdc));
+        assertEq(ciao.subAccountAssetSetLength(subAccount), 1);
+        address[] memory subAccountAssets = ciao.getSubAccountAssets(subAccount);
+        assertEq(subAccountAssets[0], address(usdc));
+        assertEq(subAccountAssets.length, 1);
+        assertEq(ciao.depositCount(subAccount), 1);
+    }
+
+    function test_Happy_Donate_Reduces_Usdc_Debt() public {
+        validateAssets();
+        int256 debtQuantity = -200e18;
+        address subAccount = Commons.getSubAccount(users.alice, 0);
+        vm.expectEmit(address(ciao));
+        emit Events.BalanceChanged(
+            subAccount,
+            address(usdc),
+            int256(ciao.balances(subAccount, address(usdc))),
+            int256(ciao.balances(subAccount, address(usdc))) + debtQuantity
+        );
+        ciao.settleCoreCollateral(subAccount, debtQuantity);
+        assertEq(ciao.balances(subAccount, address(usdc)), 0);
+        assertEq(ciao.coreCollateralDebt(subAccount), uint256(-debtQuantity));
+        usdc.approve(address(ciao), defaults.usdcDepositQuantity());
+        expectCallToTransferFrom(users.gov, address(ciao), defaults.usdcDepositQuantity());
+        vm.expectEmit(address(ciao));
+        emit Events.BalanceChanged(
+            subAccount,
+            address(usdc),
+            int256(ciao.balances(subAccount, address(usdc)))
+                - int256(ciao.coreCollateralDebt(subAccount)),
+            int256(ciao.balances(subAccount, address(usdc)))
+                - int256(ciao.coreCollateralDebt(subAccount))
+                + int256(Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals()))
+        );
+        vm.expectEmit(address(ciao));
+        emit Events.Deposit(users.alice, 0, address(usdc), defaults.usdcDepositQuantity());
+        ciao.donate(users.alice, 0, defaults.usdcDepositQuantity(), address(usdc));
+        assertEq(
+            ciao.balances(subAccount, address(usdc)),
+            Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals())
+                - (uint256(-debtQuantity))
+        );
+        assertEq(ciao.coreCollateralDebt(subAccount), 0);
+        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(usdc)));
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(usdc));
+        assertEq(ciao.subAccountAssetSetLength(subAccount), 1);
+        address[] memory subAccountAssets = ciao.getSubAccountAssets(subAccount);
+        assertEq(subAccountAssets[0], address(usdc));
+        assertEq(subAccountAssets.length, 1);
+        assertEq(ciao.depositCount(subAccount), 1);
+    }
+
+    function test_Happy_Donate_Reduces_Usdc_Debt_But_Still_Debt() public {
+        validateAssets();
+        int256 debtQuantity = -1000e18;
+        uint256 depositQuantity = 500 * 10 ** usdc.decimals();
+        address subAccount = Commons.getSubAccount(users.alice, 0);
+        vm.expectEmit(address(ciao));
+        emit Events.BalanceChanged(
+            subAccount,
+            address(usdc),
+            int256(ciao.balances(subAccount, address(usdc))),
+            int256(ciao.balances(subAccount, address(usdc))) + debtQuantity
+        );
+        ciao.settleCoreCollateral(subAccount, debtQuantity);
+        assertEq(ciao.balances(subAccount, address(usdc)), 0);
+        assertEq(ciao.coreCollateralDebt(subAccount), uint256(-debtQuantity));
+        usdc.approve(address(ciao), depositQuantity);
+        expectCallToTransferFrom(users.gov, address(ciao), depositQuantity);
+        vm.expectEmit(address(ciao));
+        emit Events.BalanceChanged(
+            subAccount,
+            address(usdc),
+            int256(ciao.balances(subAccount, address(usdc)))
+                - int256(ciao.coreCollateralDebt(subAccount)),
+            int256(ciao.balances(subAccount, address(usdc)))
+                - int256(ciao.coreCollateralDebt(subAccount))
+                + int256(Commons.convertToE18(depositQuantity, usdc.decimals()))
+        );
+        vm.expectEmit(address(ciao));
+        emit Events.Deposit(users.alice, 0, address(usdc), depositQuantity);
+        ciao.donate(users.alice, 0, depositQuantity, address(usdc));
+        assertEq(ciao.depositCount(subAccount), 1);
+        assertEq(ciao.balances(subAccount, address(usdc)), 0);
+        assertEq(ciao.coreCollateralDebt(subAccount), 500e18);
+        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(usdc)));
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(usdc));
+        assertEq(ciao.subAccountAssetSetLength(subAccount), 1);
+        address[] memory subAccountAssets = ciao.getSubAccountAssets(subAccount);
+        assertEq(subAccountAssets[0], address(usdc));
+        assertEq(subAccountAssets.length, 1);
+    }
+
+    function test_Fail_Donate_Usdc_0() public {
+        validateAssets();
+        usdc.approve(address(ciao), defaults.usdcDepositQuantity());
+        vm.expectRevert(bytes4(keccak256("DepositQuantityInvalid()")));
+        ciao.donate(users.alice, 1, 0, address(usdc));
+    }
+
+    function test_Fail_Donate_Not_Owner() public {
+        validateAssets();
+        vm.startPrank(users.hackerman);
+        usdc.approve(address(ciao), defaults.usdcDepositQuantity());
+        vm.expectRevert("UNAUTHORIZED");
+        ciao.donate(users.alice, 1, 0, address(usdc));
+    }
+
+    function test_Fail_Donate_Usdc_InvalidProduct() public {
+        usdc.approve(address(ciao), defaults.usdcDepositQuantity());
+        vm.expectRevert(bytes4(keccak256("ProductInvalid()")));
+        ciao.donate(users.alice, 1, 1, users.gov);
+    }
+
+    function test_Happy_Donate_Weth() public {
+        validateAssets();
+        weth.approve(address(ciao), defaults.wethDepositQuantity());
+        address subAccount = Commons.getSubAccount(users.alice, 1);
+        expectCallToTransferFromToken(
+            weth, users.gov, address(ciao), defaults.wethDepositQuantity()
+        );
+        vm.expectEmit(address(ciao));
+        emit Events.BalanceChanged(
+            subAccount,
+            address(weth),
+            int256(ciao.balances(subAccount, address(weth))),
+            int256(ciao.balances(subAccount, address(weth)))
+                + int256(defaults.wethDepositQuantity())
+        );
+        vm.expectEmit(address(ciao));
+        emit Events.Deposit(users.alice, 1, address(weth), defaults.wethDepositQuantity());
+        ciao.donate(users.alice, 1, defaults.wethDepositQuantity(), address(weth));
+        assertEq(ciao.depositCount(subAccount), 1);
+        assertEq(
+            ciao.balances(subAccount, address(weth)),
+            Commons.convertToE18(defaults.wethDepositQuantity(), 18)
+        );
+        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(weth)));
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(weth));
+        assertEq(ciao.subAccountAssetSetLength(subAccount), 1);
     }
 
     function test_Happy_Withdraw_Full_Usdc() public {
@@ -399,8 +425,7 @@ contract CiaoBaseTest is Base_Test {
         vm.expectEmit(address(ciao));
         emit Events.RequestWithdrawal(users.alice, 1, asset, quantity);
         ciao.requestWithdrawal(1, quantity, asset);
-        (uint256 _quantity, uint256 _requestTimestamp) = ciao
-            .withdrawalReceipts(subAccount, asset);
+        (uint256 _quantity, uint256 _requestTimestamp) = ciao.withdrawalReceipts(subAccount, asset);
         assertEq(Commons.convertToE18(quantity, usdc.decimals()), _quantity);
         assertEq(block.timestamp, _requestTimestamp);
         vm.warp(block.timestamp + 86400);
@@ -410,38 +435,17 @@ contract CiaoBaseTest is Base_Test {
             subAccount,
             address(usdc),
             int256(ciao.balances(subAccount, address(usdc))),
-            int256(ciao.balances(subAccount, address(usdc))) -
-                int256(
-                    Commons.convertToE18(
-                        defaults.usdcDepositQuantity(),
-                        usdc.decimals()
-                    )
-                )
+            int256(ciao.balances(subAccount, address(usdc)))
+                - int256(Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals()))
         );
         vm.expectEmit(address(ciao));
-        emit Events.ExecuteWithdrawal(
-            users.alice,
-            1,
-            address(usdc),
-            defaults.usdcDepositQuantity()
-        );
+        emit Events.ExecuteWithdrawal(users.alice, 1, address(usdc), defaults.usdcDepositQuantity());
         vm.startPrank(users.gov);
-        ciao.executeWithdrawal(
-            users.alice,
-            1,
-            defaults.usdcDepositQuantity(),
-            address(usdc)
-        );
+        ciao.executeWithdrawal(users.alice, 1, defaults.usdcDepositQuantity(), address(usdc));
         assertEq(ciao.balances(subAccount, address(usdc)), 0);
         assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(usdc)));
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0),
-            address(usdc)
-        );
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 1),
-            address(weth)
-        );
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(usdc));
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 1), address(weth));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 2);
     }
 
@@ -464,8 +468,8 @@ contract CiaoBaseTest is Base_Test {
         uint256 quantity = defaults.wethDepositQuantity();
         emit Events.RequestWithdrawal(users.alice, 1, address(usdc), quantity);
         ciao.requestWithdrawal(1, quantity, address(weth));
-        (uint256 _quantity, uint256 _requestTimestamp) = ciao
-            .withdrawalReceipts(subAccount, address(weth));
+        (uint256 _quantity, uint256 _requestTimestamp) =
+            ciao.withdrawalReceipts(subAccount, address(weth));
         assertEq(quantity, _quantity);
         assertEq(block.timestamp, _requestTimestamp);
     }
@@ -491,8 +495,7 @@ contract CiaoBaseTest is Base_Test {
         vm.expectEmit(address(ciao));
         emit Events.RequestWithdrawal(users.alice, 1, asset, quantity);
         ciao.requestWithdrawal(1, quantity, asset);
-        (uint256 _quantity, uint256 _requestTimestamp) = ciao
-            .withdrawalReceipts(subAccount, asset);
+        (uint256 _quantity, uint256 _requestTimestamp) = ciao.withdrawalReceipts(subAccount, asset);
         assertEq(quantity, _quantity);
         assertEq(block.timestamp, _requestTimestamp);
         vm.warp(block.timestamp + 86400);
@@ -510,10 +513,7 @@ contract CiaoBaseTest is Base_Test {
         ciao.executeWithdrawal(users.alice, 1, quantity, asset);
         assertEq(ciao.balances(subAccount, asset), 0);
         assertFalse(ciao.isAssetInSubAccountAssetSet(subAccount, asset));
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0),
-            address(usdc)
-        );
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(usdc));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 1);
     }
 
@@ -525,8 +525,7 @@ contract CiaoBaseTest is Base_Test {
         vm.expectEmit(address(ciao));
         emit Events.RequestWithdrawal(users.alice, 1, asset, quantity);
         ciao.requestWithdrawal(1, quantity, asset);
-        (uint256 _quantity, uint256 _requestTimestamp) = ciao
-            .withdrawalReceipts(subAccount, asset);
+        (uint256 _quantity, uint256 _requestTimestamp) = ciao.withdrawalReceipts(subAccount, asset);
         assertEq(Commons.convertToE18(quantity, usdc.decimals()), _quantity);
         assertEq(block.timestamp, _requestTimestamp);
         vm.warp(block.timestamp + 86400);
@@ -536,8 +535,8 @@ contract CiaoBaseTest is Base_Test {
             subAccount,
             address(usdc),
             int256(ciao.balances(subAccount, address(usdc))),
-            int256(ciao.balances(subAccount, address(usdc))) -
-                int256(Commons.convertToE18(quantity, usdc.decimals()))
+            int256(ciao.balances(subAccount, address(usdc)))
+                - int256(Commons.convertToE18(quantity, usdc.decimals()))
         );
         vm.expectEmit(address(ciao));
         emit Events.ExecuteWithdrawal(users.alice, 1, asset, quantity);
@@ -545,16 +544,10 @@ contract CiaoBaseTest is Base_Test {
         ciao.executeWithdrawal(users.alice, 1, quantity, asset);
         assertEq(
             ciao.balances(subAccount, address(usdc)),
-            Commons.convertToE18(
-                defaults.usdcDepositQuantity(),
-                usdc.decimals()
-            ) / 2
+            Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals()) / 2
         );
         assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(usdc)));
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0),
-            address(usdc)
-        );
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(usdc));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 2);
     }
 
@@ -566,8 +559,7 @@ contract CiaoBaseTest is Base_Test {
         vm.expectEmit(address(ciao));
         emit Events.RequestWithdrawal(users.alice, 1, asset, quantity);
         ciao.requestWithdrawal(1, quantity, asset);
-        (uint256 _quantity, uint256 _requestTimestamp) = ciao
-            .withdrawalReceipts(subAccount, asset);
+        (uint256 _quantity, uint256 _requestTimestamp) = ciao.withdrawalReceipts(subAccount, asset);
         assertEq(Commons.convertToE18(quantity, usdc.decimals()), _quantity);
         assertEq(block.timestamp, _requestTimestamp);
         vm.warp(block.timestamp + 86400);
@@ -577,33 +569,17 @@ contract CiaoBaseTest is Base_Test {
             subAccount,
             address(usdc),
             int256(ciao.balances(subAccount, address(usdc))),
-            int256(ciao.balances(subAccount, address(usdc))) -
-                int256(Commons.convertToE18(quantity, usdc.decimals()))
+            int256(ciao.balances(subAccount, address(usdc)))
+                - int256(Commons.convertToE18(quantity, usdc.decimals()))
         );
         vm.expectEmit(address(ciao));
-        emit Events.ExecuteWithdrawal(
-            users.alice,
-            1,
-            address(usdc),
-            defaults.usdcDepositQuantity()
-        );
+        emit Events.ExecuteWithdrawal(users.alice, 1, address(usdc), defaults.usdcDepositQuantity());
         vm.startPrank(users.gov);
-        ciao.executeWithdrawal(
-            users.alice,
-            1,
-            defaults.usdcDepositQuantity(),
-            address(usdc)
-        );
+        ciao.executeWithdrawal(users.alice, 1, defaults.usdcDepositQuantity(), address(usdc));
         assertEq(ciao.balances(subAccount, address(usdc)), 0);
         assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(usdc)));
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0),
-            address(usdc)
-        );
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 1),
-            address(weth)
-        );
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(usdc));
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 1), address(weth));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 2);
         vm.startPrank(users.alice);
         quantity = defaults.wethDepositQuantity();
@@ -611,18 +587,11 @@ contract CiaoBaseTest is Base_Test {
         vm.expectEmit(address(ciao));
         emit Events.RequestWithdrawal(users.alice, 1, asset, quantity);
         ciao.requestWithdrawal(1, quantity, asset);
-        (_quantity, _requestTimestamp) = ciao.withdrawalReceipts(
-            subAccount,
-            asset
-        );
+        (_quantity, _requestTimestamp) = ciao.withdrawalReceipts(subAccount, asset);
         assertEq(quantity, _quantity);
         assertEq(block.timestamp, _requestTimestamp);
         vm.warp(block.timestamp + 86400);
-        expectCallToTransferToken(
-            weth,
-            users.alice,
-            defaults.wethDepositQuantity()
-        );
+        expectCallToTransferToken(weth, users.alice, defaults.wethDepositQuantity());
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             subAccount,
@@ -631,23 +600,11 @@ contract CiaoBaseTest is Base_Test {
             int256(ciao.balances(subAccount, address(weth))) - int256(quantity)
         );
         vm.expectEmit(address(ciao));
-        emit Events.ExecuteWithdrawal(
-            users.alice,
-            1,
-            address(weth),
-            defaults.wethDepositQuantity()
-        );
+        emit Events.ExecuteWithdrawal(users.alice, 1, address(weth), defaults.wethDepositQuantity());
         vm.startPrank(users.gov);
-        ciao.executeWithdrawal(
-            users.alice,
-            1,
-            defaults.wethDepositQuantity(),
-            address(weth)
-        );
+        ciao.executeWithdrawal(users.alice, 1, defaults.wethDepositQuantity(), address(weth));
         assertEq(ciao.balances(subAccount, address(weth)), 0);
-        assertFalse(
-            ciao.isAssetInSubAccountAssetSet(subAccount, address(weth))
-        );
+        assertFalse(ciao.isAssetInSubAccountAssetSet(subAccount, address(weth)));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 1);
     }
 
@@ -730,11 +687,10 @@ contract CiaoBaseTest is Base_Test {
         emit Events.BalanceChanged(
             subAccount,
             address(usdc),
-            int256(ciao.balances(subAccount, address(usdc))) -
-                int256(ciao.coreCollateralDebt(subAccount)),
-            int256(ciao.balances(subAccount, address(usdc))) -
-                int256(ciao.coreCollateralDebt(subAccount)) +
-                quantity
+            int256(ciao.balances(subAccount, address(usdc)))
+                - int256(ciao.coreCollateralDebt(subAccount)),
+            int256(ciao.balances(subAccount, address(usdc)))
+                - int256(ciao.coreCollateralDebt(subAccount)) + quantity
         );
         ciao.settleCoreCollateral(subAccount, quantity);
 
@@ -767,11 +723,10 @@ contract CiaoBaseTest is Base_Test {
         emit Events.BalanceChanged(
             subAccount,
             address(usdc),
-            int256(ciao.balances(subAccount, address(usdc))) -
-                int256(ciao.coreCollateralDebt(subAccount)),
-            int256(ciao.balances(subAccount, address(usdc))) -
-                int256(ciao.coreCollateralDebt(subAccount)) +
-                quantity2
+            int256(ciao.balances(subAccount, address(usdc)))
+                - int256(ciao.coreCollateralDebt(subAccount)),
+            int256(ciao.balances(subAccount, address(usdc)))
+                - int256(ciao.coreCollateralDebt(subAccount)) + quantity2
         );
         ciao.settleCoreCollateral(subAccount, quantity2);
 
@@ -844,5 +799,20 @@ contract CiaoBaseTest is Base_Test {
         usdc.approve(address(ciao), defaults.usdcDepositQuantity());
         vm.expectRevert(bytes4(keccak256("DepositQuantityInvalid()")));
         ciao.deposit(users.gov, 1, 5e6, address(usdc));
+    }
+
+    function test_Happy_Set_WithdrawalFee() public {
+        vm.expectEmit(address(ciao));
+        emit Events.WithdrawalFeeChanged(address(usdc), 10e6);
+        ciao.setWithdrawalFee(address(usdc), 10e6);
+        assertEq(ciao.withdrawalFees(address(usdc)), 10e6);
+    }
+
+    function test_Fail_Set_WithdrawalFee_unauth() public {
+        address asset = address(usdc);
+        vm.startPrank({msgSender: users.hackerman});
+        vm.expectRevert("UNAUTHORIZED");
+        ciao.setWithdrawalFee(asset, 10e6);
+        assertEq(ciao.withdrawalFees(asset), 0);
     }
 }

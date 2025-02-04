@@ -17,11 +17,9 @@ contract PerpCrucibleTest is Base_Test {
     address aliceSubAccount;
 
     // set up account with these initial positions
-    Structs.NewPosition initialEthPerpPos =
-        Structs.NewPosition(2000e18, 10e18, true);
+    Structs.NewPosition initialEthPerpPos = Structs.NewPosition(2000e18, 10e18, true);
 
-    Structs.NewPosition initialBtcPerpPos =
-        Structs.NewPosition(30000e18, 2e18, false);
+    Structs.NewPosition initialBtcPerpPos = Structs.NewPosition(30000e18, 2e18, false);
 
     function setUp() public virtual override {
         Base_Test.setUp();
@@ -31,19 +29,12 @@ contract PerpCrucibleTest is Base_Test {
         // addressManifest.updateAddressInManifest(4, users.gov);
         address newPerpCrucibleImpl = address(new PerpCrucible());
         perpCrucibleProxyAdmin.upgradeAndCall(
-            ITransparentUpgradeableProxy(address(perpCrucibleProxy)),
-            newPerpCrucibleImpl,
-            bytes("")
+            ITransparentUpgradeableProxy(address(perpCrucibleProxy)), newPerpCrucibleImpl, bytes("")
         );
         assertEq(
             address(
                 uint160(
-                    uint256(
-                        vm.load(
-                            address(perpCrucibleProxy),
-                            ERC1967Utils.IMPLEMENTATION_SLOT
-                        )
-                    )
+                    uint256(vm.load(address(perpCrucibleProxy), ERC1967Utils.IMPLEMENTATION_SLOT))
                 )
             ),
             newPerpCrucibleImpl
@@ -53,19 +44,12 @@ contract PerpCrucibleTest is Base_Test {
     function test_Happy_ProxyAdmin_Can_Upgrade() public {
         address newPerpCrucibleImpl = address(new PerpCrucible());
         perpCrucibleProxyAdmin.upgradeAndCall(
-            ITransparentUpgradeableProxy(address(perpCrucibleProxy)),
-            newPerpCrucibleImpl,
-            bytes("")
+            ITransparentUpgradeableProxy(address(perpCrucibleProxy)), newPerpCrucibleImpl, bytes("")
         );
         assertEq(
             address(
                 uint160(
-                    uint256(
-                        vm.load(
-                            address(perpCrucibleProxy),
-                            ERC1967Utils.IMPLEMENTATION_SLOT
-                        )
-                    )
+                    uint256(vm.load(address(perpCrucibleProxy), ERC1967Utils.IMPLEMENTATION_SLOT))
                 )
             ),
             newPerpCrucibleImpl
@@ -98,26 +82,17 @@ contract PerpCrucibleTest is Base_Test {
             wbtcUsdcPerpPrice
         );
 
-        Structs.PositionState memory contractStateEth = perpCrucible
-            .getSubAccountPosition(
-                defaults.wethUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateEth =
+            perpCrucible.getSubAccountPosition(defaults.wethUsdcPerpProductId(), aliceSubAccount);
 
-        Structs.PositionState memory contractStateBtc = perpCrucible
-            .getSubAccountPosition(
-                defaults.wbtcUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateBtc =
+            perpCrucible.getSubAccountPosition(defaults.wbtcUsdcPerpProductId(), aliceSubAccount);
         assertEq(contractStateEth.avgEntryPrice, 2000e18);
         assertEq(contractStateEth.quantity, 10e18);
         assertEq(contractStateEth.isLong, true);
         assertEq(contractStateEth.initCumFunding, 499e17);
         assertTrue(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wethUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wethUsdcPerpProductId())
         );
 
         assertEq(contractStateBtc.avgEntryPrice, 30000e18);
@@ -125,10 +100,7 @@ contract PerpCrucibleTest is Base_Test {
         assertEq(contractStateBtc.isLong, false);
         assertEq(contractStateBtc.initCumFunding, -201e17);
         assertTrue(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wbtcUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wbtcUsdcPerpProductId())
         );
 
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 500e18);
@@ -144,11 +116,7 @@ contract PerpCrucibleTest is Base_Test {
         test_Happy_updateNewPosition();
 
         // update position
-        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(
-            1850e18,
-            30e18,
-            true
-        );
+        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(1850e18, 30e18, true);
 
         uint32 perpId = defaults.wethUsdcPerpProductId();
 
@@ -162,12 +130,7 @@ contract PerpCrucibleTest is Base_Test {
                 !initialEthPerpPos.isLong,
                 499e17
             ),
-            Structs.PositionState(
-                18875e17,
-                40e18,
-                !initialEthPerpPos.isLong,
-                499e17
-            )
+            Structs.PositionState(18875e17, 40e18, !initialEthPerpPos.isLong, 499e17)
         );
         vm.expectEmit(address(perpCrucible));
         emit Events.PerpPositionUpdated(
@@ -179,36 +142,20 @@ contract PerpCrucibleTest is Base_Test {
                 initialEthPerpPos.isLong,
                 499e17
             ),
-            Structs.PositionState(
-                18875e17,
-                40e18,
-                initialEthPerpPos.isLong,
-                499e17
-            )
+            Structs.PositionState(18875e17, 40e18, initialEthPerpPos.isLong, 499e17)
         );
 
-        perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            perpId,
-            ethPerpPos
-        );
+        perpCrucible.updatePosition(address(0), aliceSubAccount, perpId, ethPerpPos);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wethUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wethUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 18875e17);
         assertEq(contractStateAfter.quantity, 40e18);
         assertEq(contractStateAfter.isLong, true);
         assertEq(contractStateAfter.initCumFunding, 499e17);
         assertTrue(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wethUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wethUsdcPerpProductId())
         );
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 500e18);
         assertEq(ciao.coreCollateralDebt(aliceSubAccount), 0);
@@ -219,11 +166,7 @@ contract PerpCrucibleTest is Base_Test {
         test_Happy_updateNewPosition();
 
         // update position
-        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(
-            1850e18,
-            30e18,
-            true
-        );
+        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(1850e18, 30e18, true);
 
         // increment ETH funding rate by $0.3 (longs must pay shorts)
         setFundingRate(defaults.wethUsdcPerpProductId(), 3e17);
@@ -239,12 +182,7 @@ contract PerpCrucibleTest is Base_Test {
                 !initialEthPerpPos.isLong,
                 499e17
             ),
-            Structs.PositionState(
-                18875e17,
-                40e18,
-                !initialEthPerpPos.isLong,
-                502e17
-            )
+            Structs.PositionState(18875e17, 40e18, !initialEthPerpPos.isLong, 502e17)
         );
         vm.expectEmit(address(perpCrucible));
         emit Events.PerpPositionUpdated(
@@ -256,45 +194,30 @@ contract PerpCrucibleTest is Base_Test {
                 initialEthPerpPos.isLong,
                 499e17
             ),
-            Structs.PositionState(
-                18875e17,
-                40e18,
-                initialEthPerpPos.isLong,
-                502e17
-            )
+            Structs.PositionState(18875e17, 40e18, initialEthPerpPos.isLong, 502e17)
         );
 
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wethUsdcPerpProductId(),
-            ethPerpPos
+            address(0), aliceSubAccount, defaults.wethUsdcPerpProductId(), ethPerpPos
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             aliceSubAccount,
             address(usdc),
             int256(ciao.balances(aliceSubAccount, address(usdc))),
-            int256(ciao.balances(aliceSubAccount, address(usdc))) +
-                aliceRealisedPnl
+            int256(ciao.balances(aliceSubAccount, address(usdc))) + aliceRealisedPnl
         );
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wethUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wethUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 18875e17);
         assertEq(contractStateAfter.quantity, 40e18);
         assertEq(contractStateAfter.isLong, true);
         assertEq(contractStateAfter.initCumFunding, 502e17);
         assertTrue(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wethUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wethUsdcPerpProductId())
         );
         // 500 + (-0.3 * 10)
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 497e18);
@@ -307,11 +230,7 @@ contract PerpCrucibleTest is Base_Test {
         test_Happy_updateNewPosition();
 
         // update position
-        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(
-            1850e18,
-            30e18,
-            true
-        );
+        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(1850e18, 30e18, true);
 
         // decrement ETH funding rate by $0.3 (shorts must pay longs)
         setFundingRate(defaults.wethUsdcPerpProductId(), -3e17);
@@ -326,12 +245,7 @@ contract PerpCrucibleTest is Base_Test {
                 !initialEthPerpPos.isLong,
                 499e17
             ),
-            Structs.PositionState(
-                18875e17,
-                40e18,
-                !initialEthPerpPos.isLong,
-                496e17
-            )
+            Structs.PositionState(18875e17, 40e18, !initialEthPerpPos.isLong, 496e17)
         );
         vm.expectEmit(address(perpCrucible));
         emit Events.PerpPositionUpdated(
@@ -343,44 +257,29 @@ contract PerpCrucibleTest is Base_Test {
                 initialEthPerpPos.isLong,
                 499e17
             ),
-            Structs.PositionState(
-                18875e17,
-                40e18,
-                initialEthPerpPos.isLong,
-                496e17
-            )
+            Structs.PositionState(18875e17, 40e18, initialEthPerpPos.isLong, 496e17)
         );
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wethUsdcPerpProductId(),
-            ethPerpPos
+            address(0), aliceSubAccount, defaults.wethUsdcPerpProductId(), ethPerpPos
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             aliceSubAccount,
             address(usdc),
             int256(ciao.balances(aliceSubAccount, address(usdc))),
-            int256(ciao.balances(aliceSubAccount, address(usdc))) +
-                aliceRealisedPnl
+            int256(ciao.balances(aliceSubAccount, address(usdc))) + aliceRealisedPnl
         );
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wethUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wethUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 18875e17);
         assertEq(contractStateAfter.quantity, 40e18);
         assertEq(contractStateAfter.isLong, true);
         assertEq(contractStateAfter.initCumFunding, 496e17);
         assertTrue(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wethUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wethUsdcPerpProductId())
         );
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 503e18);
 
@@ -426,36 +325,26 @@ contract PerpCrucibleTest is Base_Test {
             Structs.PositionState(0, 0, false, 0)
         );
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wethUsdcPerpProductId(),
-            ethPerpPos
+            address(0), aliceSubAccount, defaults.wethUsdcPerpProductId(), ethPerpPos
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             aliceSubAccount,
             address(usdc),
             int256(ciao.balances(aliceSubAccount, address(usdc))),
-            int256(ciao.balances(aliceSubAccount, address(usdc))) +
-                aliceRealisedPnl
+            int256(ciao.balances(aliceSubAccount, address(usdc))) + aliceRealisedPnl
         );
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wethUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wethUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 0);
         assertEq(contractStateAfter.quantity, 0);
         assertEq(contractStateAfter.isLong, false);
         assertEq(contractStateAfter.initCumFunding, 0);
         assertFalse(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wethUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wethUsdcPerpProductId())
         );
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 0);
         // $1003 loss (-1k pnl - $3 funding)
@@ -501,36 +390,26 @@ contract PerpCrucibleTest is Base_Test {
             Structs.PositionState(0, 0, false, 0)
         );
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wethUsdcPerpProductId(),
-            ethPerpPos
+            address(0), aliceSubAccount, defaults.wethUsdcPerpProductId(), ethPerpPos
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             aliceSubAccount,
             address(usdc),
             int256(ciao.balances(aliceSubAccount, address(usdc))),
-            int256(ciao.balances(aliceSubAccount, address(usdc))) +
-                aliceRealisedPnl
+            int256(ciao.balances(aliceSubAccount, address(usdc))) + aliceRealisedPnl
         );
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wethUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wethUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 0);
         assertEq(contractStateAfter.quantity, 0);
         assertEq(contractStateAfter.isLong, false);
         assertEq(contractStateAfter.initCumFunding, 0);
         assertFalse(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wethUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wethUsdcPerpProductId())
         );
         // $11999 profit (12k pnl - $1 funding)
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 12499e18);
@@ -576,36 +455,26 @@ contract PerpCrucibleTest is Base_Test {
             Structs.PositionState(2000e18, 5e18, true, 50e18)
         );
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wethUsdcPerpProductId(),
-            ethPerpPos
+            address(0), aliceSubAccount, defaults.wethUsdcPerpProductId(), ethPerpPos
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             aliceSubAccount,
             address(usdc),
             int256(ciao.balances(aliceSubAccount, address(usdc))),
-            int256(ciao.balances(aliceSubAccount, address(usdc))) +
-                aliceRealisedPnl
+            int256(ciao.balances(aliceSubAccount, address(usdc))) + aliceRealisedPnl
         );
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wethUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wethUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 2000e18);
         assertEq(contractStateAfter.quantity, 5e18);
         assertEq(contractStateAfter.isLong, true);
         assertEq(contractStateAfter.initCumFunding, 50e18);
         assertTrue(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wethUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wethUsdcPerpProductId())
         );
         // $1501 loss (-1.5k realised pnl - $1 funding)
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 0);
@@ -651,36 +520,26 @@ contract PerpCrucibleTest is Base_Test {
             Structs.PositionState(2000e18, 7e18, true, 498e17)
         );
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wethUsdcPerpProductId(),
-            ethPerpPos
+            address(0), aliceSubAccount, defaults.wethUsdcPerpProductId(), ethPerpPos
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             aliceSubAccount,
             address(usdc),
             int256(ciao.balances(aliceSubAccount, address(usdc))),
-            int256(ciao.balances(aliceSubAccount, address(usdc))) +
-                aliceRealisedPnl
+            int256(ciao.balances(aliceSubAccount, address(usdc))) + aliceRealisedPnl
         );
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wethUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wethUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 2000e18);
         assertEq(contractStateAfter.quantity, 7e18);
         assertEq(contractStateAfter.isLong, true);
         assertEq(contractStateAfter.initCumFunding, 498e17);
         assertTrue(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wethUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wethUsdcPerpProductId())
         );
         // $61 profit ($60 realised pnl + $1 funding)
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 561e18);
@@ -726,36 +585,26 @@ contract PerpCrucibleTest is Base_Test {
             Structs.PositionState(2034e18, 4e18, false, 6499e17)
         );
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wethUsdcPerpProductId(),
-            ethPerpPos
+            address(0), aliceSubAccount, defaults.wethUsdcPerpProductId(), ethPerpPos
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             aliceSubAccount,
             address(usdc),
             int256(ciao.balances(aliceSubAccount, address(usdc))),
-            int256(ciao.balances(aliceSubAccount, address(usdc))) +
-                aliceRealisedPnl
+            int256(ciao.balances(aliceSubAccount, address(usdc))) + aliceRealisedPnl
         );
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wethUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wethUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 2034e18);
         assertEq(contractStateAfter.quantity, 4e18);
         assertEq(contractStateAfter.isLong, false);
         assertEq(contractStateAfter.initCumFunding, 6499e17);
         assertTrue(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wethUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wethUsdcPerpProductId())
         );
         // $5660 loss ($340 realised pnl - $6000 funding)
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 0);
@@ -801,36 +650,26 @@ contract PerpCrucibleTest is Base_Test {
             Structs.PositionState(1900e18, 331e17, false, -1501e17)
         );
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wethUsdcPerpProductId(),
-            ethPerpPos
+            address(0), aliceSubAccount, defaults.wethUsdcPerpProductId(), ethPerpPos
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             aliceSubAccount,
             address(usdc),
             int256(ciao.balances(aliceSubAccount, address(usdc))),
-            int256(ciao.balances(aliceSubAccount, address(usdc))) +
-                aliceRealisedPnl
+            int256(ciao.balances(aliceSubAccount, address(usdc))) + aliceRealisedPnl
         );
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wethUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wethUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 1900e18);
         assertEq(contractStateAfter.quantity, 331e17);
         assertEq(contractStateAfter.isLong, false);
         assertEq(contractStateAfter.initCumFunding, -1501e17);
         assertTrue(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wethUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wethUsdcPerpProductId())
         );
         // $1000 profit (-$1000 realised pnl + $2000 funding)
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 1500e18);
@@ -846,11 +685,7 @@ contract PerpCrucibleTest is Base_Test {
         test_Happy_updateNewPosition();
 
         // update position
-        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(
-            33000e18,
-            1e18,
-            false
-        );
+        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(33000e18, 1e18, false);
         uint32 perpId = defaults.wbtcUsdcPerpProductId();
         vm.expectEmit(address(perpCrucible));
         emit Events.PerpPositionUpdated(
@@ -877,28 +712,19 @@ contract PerpCrucibleTest is Base_Test {
             Structs.PositionState(31000e18, 3e18, false, -201e17)
         );
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wbtcUsdcPerpProductId(),
-            btcPerpPos
+            address(0), aliceSubAccount, defaults.wbtcUsdcPerpProductId(), btcPerpPos
         );
-        assertEq(ciao.coreCollateralDebt(aliceSubAccount), 0);      
+        assertEq(ciao.coreCollateralDebt(aliceSubAccount), 0);
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl); // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wbtcUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wbtcUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 31000e18);
         assertEq(contractStateAfter.quantity, 3e18);
         assertEq(contractStateAfter.isLong, false);
         assertEq(contractStateAfter.initCumFunding, -201e17);
         assertTrue(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wbtcUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wbtcUsdcPerpProductId())
         );
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 500e18);
         assertEq(ciao.coreCollateralDebt(aliceSubAccount), 0);
@@ -909,11 +735,7 @@ contract PerpCrucibleTest is Base_Test {
         test_Happy_updateNewPosition();
 
         // update position
-        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(
-            42000e18,
-            2e18,
-            false
-        );
+        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(42000e18, 2e18, false);
 
         // decrement btc funding rate by $50 (shorts must pay longs)
         setFundingRate(defaults.wbtcUsdcPerpProductId(), -50e18);
@@ -943,36 +765,26 @@ contract PerpCrucibleTest is Base_Test {
             Structs.PositionState(36000e18, 4e18, false, -701e17)
         );
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wbtcUsdcPerpProductId(),
-            btcPerpPos
+            address(0), aliceSubAccount, defaults.wbtcUsdcPerpProductId(), btcPerpPos
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             aliceSubAccount,
             address(usdc),
             int256(ciao.balances(aliceSubAccount, address(usdc))),
-            int256(ciao.balances(aliceSubAccount, address(usdc))) +
-                aliceRealisedPnl
+            int256(ciao.balances(aliceSubAccount, address(usdc))) + aliceRealisedPnl
         );
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wbtcUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wbtcUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 36000e18);
         assertEq(contractStateAfter.quantity, 4e18);
         assertEq(contractStateAfter.isLong, false);
         assertEq(contractStateAfter.initCumFunding, -701e17);
         assertTrue(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wbtcUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wbtcUsdcPerpProductId())
         );
 
         // -$100 funding
@@ -986,11 +798,7 @@ contract PerpCrucibleTest is Base_Test {
         test_Happy_updateNewPosition();
 
         // update position
-        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(
-            27000e18,
-            6e18,
-            false
-        );
+        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(27000e18, 6e18, false);
 
         // increment btc funding rate by $30 (longs must pay shorts)
         setFundingRate(defaults.wbtcUsdcPerpProductId(), 30e18);
@@ -1020,36 +828,26 @@ contract PerpCrucibleTest is Base_Test {
             Structs.PositionState(27750e18, 8e18, false, 99e17)
         );
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wbtcUsdcPerpProductId(),
-            btcPerpPos
+            address(0), aliceSubAccount, defaults.wbtcUsdcPerpProductId(), btcPerpPos
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             aliceSubAccount,
             address(usdc),
             int256(ciao.balances(aliceSubAccount, address(usdc))),
-            int256(ciao.balances(aliceSubAccount, address(usdc))) +
-                aliceRealisedPnl
+            int256(ciao.balances(aliceSubAccount, address(usdc))) + aliceRealisedPnl
         );
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wbtcUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wbtcUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 27750e18);
         assertEq(contractStateAfter.quantity, 8e18);
         assertEq(contractStateAfter.isLong, false);
         assertEq(contractStateAfter.initCumFunding, 99e17);
         assertTrue(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wbtcUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wbtcUsdcPerpProductId())
         );
         // +$60 funding
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 560e18);
@@ -1096,36 +894,26 @@ contract PerpCrucibleTest is Base_Test {
             Structs.PositionState(0, 0, false, 0)
         );
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wbtcUsdcPerpProductId(),
-            btcPerpPos
+            address(0), aliceSubAccount, defaults.wbtcUsdcPerpProductId(), btcPerpPos
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             aliceSubAccount,
             address(usdc),
             int256(ciao.balances(aliceSubAccount, address(usdc))),
-            int256(ciao.balances(aliceSubAccount, address(usdc))) +
-                aliceRealisedPnl
+            int256(ciao.balances(aliceSubAccount, address(usdc))) + aliceRealisedPnl
         );
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wbtcUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wbtcUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 0);
         assertEq(contractStateAfter.quantity, 0);
         assertEq(contractStateAfter.isLong, false);
         assertEq(contractStateAfter.initCumFunding, 0);
         assertFalse(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wbtcUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wbtcUsdcPerpProductId())
         );
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 0);
         // 20k loss (-20k pnl)
@@ -1171,36 +959,26 @@ contract PerpCrucibleTest is Base_Test {
             Structs.PositionState(0, 0, false, 0)
         );
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wbtcUsdcPerpProductId(),
-            btcPerpPos
+            address(0), aliceSubAccount, defaults.wbtcUsdcPerpProductId(), btcPerpPos
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             aliceSubAccount,
             address(usdc),
             int256(ciao.balances(aliceSubAccount, address(usdc))),
-            int256(ciao.balances(aliceSubAccount, address(usdc))) +
-                aliceRealisedPnl
+            int256(ciao.balances(aliceSubAccount, address(usdc))) + aliceRealisedPnl
         );
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wbtcUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wbtcUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 0);
         assertEq(contractStateAfter.quantity, 0);
         assertEq(contractStateAfter.isLong, false);
         assertEq(contractStateAfter.initCumFunding, 0);
         assertFalse(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wbtcUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wbtcUsdcPerpProductId())
         );
         // $4020 profit (4000 pnl + 20 funding)
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 4520e18);
@@ -1246,36 +1024,26 @@ contract PerpCrucibleTest is Base_Test {
             Structs.PositionState(30000e18, 15e17, false, -196e17)
         );
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wbtcUsdcPerpProductId(),
-            btcPerpPos
+            address(0), aliceSubAccount, defaults.wbtcUsdcPerpProductId(), btcPerpPos
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             aliceSubAccount,
             address(usdc),
             int256(ciao.balances(aliceSubAccount, address(usdc))),
-            int256(ciao.balances(aliceSubAccount, address(usdc))) +
-                aliceRealisedPnl
+            int256(ciao.balances(aliceSubAccount, address(usdc))) + aliceRealisedPnl
         );
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wbtcUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wbtcUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 30000e18);
         assertEq(contractStateAfter.quantity, 15e17);
         assertEq(contractStateAfter.isLong, false);
         assertEq(contractStateAfter.initCumFunding, -196e17);
         assertTrue(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wbtcUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wbtcUsdcPerpProductId())
         );
         // $999 loss (-1k realised pnl + $1 funding)
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 0);
@@ -1321,36 +1089,26 @@ contract PerpCrucibleTest is Base_Test {
             Structs.PositionState(30000e18, 19e17, false, -221e17)
         );
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wbtcUsdcPerpProductId(),
-            btcPerpPos
+            address(0), aliceSubAccount, defaults.wbtcUsdcPerpProductId(), btcPerpPos
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             aliceSubAccount,
             address(usdc),
             int256(ciao.balances(aliceSubAccount, address(usdc))),
-            int256(ciao.balances(aliceSubAccount, address(usdc))) +
-                aliceRealisedPnl
+            int256(ciao.balances(aliceSubAccount, address(usdc))) + aliceRealisedPnl
         );
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wbtcUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wbtcUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 30000e18);
         assertEq(contractStateAfter.quantity, 19e17);
         assertEq(contractStateAfter.isLong, false);
         assertEq(contractStateAfter.initCumFunding, -221e17);
         assertTrue(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wbtcUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wbtcUsdcPerpProductId())
         );
         // $496 profit ($500 realised pnl - $4 funding)
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 996e18);
@@ -1396,36 +1154,26 @@ contract PerpCrucibleTest is Base_Test {
             Structs.PositionState(30500e18, 5e18, true, 419e17)
         );
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wbtcUsdcPerpProductId(),
-            btcPerpPos
+            address(0), aliceSubAccount, defaults.wbtcUsdcPerpProductId(), btcPerpPos
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             aliceSubAccount,
             address(usdc),
             int256(ciao.balances(aliceSubAccount, address(usdc))),
-            int256(ciao.balances(aliceSubAccount, address(usdc))) +
-                aliceRealisedPnl
+            int256(ciao.balances(aliceSubAccount, address(usdc))) + aliceRealisedPnl
         );
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wbtcUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wbtcUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 30500e18);
         assertEq(contractStateAfter.quantity, 5e18);
         assertEq(contractStateAfter.isLong, true);
         assertEq(contractStateAfter.initCumFunding, 419e17);
         assertTrue(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wbtcUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wbtcUsdcPerpProductId())
         );
         // $876 loss (-$1000 realised pnl + $124 funding)
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 0);
@@ -1471,36 +1219,26 @@ contract PerpCrucibleTest is Base_Test {
             Structs.PositionState(28500e18, 8e18, true, -20094e15)
         );
         (, int256 aliceRealisedPnl) = perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            defaults.wbtcUsdcPerpProductId(),
-            btcPerpPos
+            address(0), aliceSubAccount, defaults.wbtcUsdcPerpProductId(), btcPerpPos
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             aliceSubAccount,
             address(usdc),
             int256(ciao.balances(aliceSubAccount, address(usdc))),
-            int256(ciao.balances(aliceSubAccount, address(usdc))) +
-                aliceRealisedPnl
+            int256(ciao.balances(aliceSubAccount, address(usdc))) + aliceRealisedPnl
         );
         ciao.settleCoreCollateral(aliceSubAccount, aliceRealisedPnl);
         // get contract state after
-        Structs.PositionState memory contractStateAfter = perpCrucible
-            .getSubAccountPosition(
-                defaults.wbtcUsdcPerpProductId(),
-                aliceSubAccount
-            );
+        Structs.PositionState memory contractStateAfter =
+            perpCrucible.getSubAccountPosition(defaults.wbtcUsdcPerpProductId(), aliceSubAccount);
 
         assertEq(contractStateAfter.avgEntryPrice, 28500e18);
         assertEq(contractStateAfter.quantity, 8e18);
         assertEq(contractStateAfter.isLong, true);
         assertEq(contractStateAfter.initCumFunding, -20094e15);
         assertTrue(
-            perpCrucible.isPositionOpenForId(
-                aliceSubAccount,
-                defaults.wbtcUsdcPerpProductId()
-            )
+            perpCrucible.isPositionOpenForId(aliceSubAccount, defaults.wbtcUsdcPerpProductId())
         );
         // $3000.012 profit ($3000 realised pnl + $0.012 funding)
         assertEq(ciao.balances(aliceSubAccount, address(usdc)), 3500012e15);
@@ -1508,9 +1246,7 @@ contract PerpCrucibleTest is Base_Test {
     }
 
     function test_Happy_UpdateCumulativeFundings() public {
-        int256 initFunding = perpCrucible.currentCumFunding(
-            defaults.wbtcUsdcPerpProductId()
-        );
+        int256 initFunding = perpCrucible.currentCumFunding(defaults.wbtcUsdcPerpProductId());
         assertEq(initFunding, 0);
 
         // update funding snapshots
@@ -1521,9 +1257,7 @@ contract PerpCrucibleTest is Base_Test {
         bytes memory payload = abi.encodePacked(perpIds[0], cumFundings[0]);
         perpCrucible.updateCumulativeFundings(payload);
 
-        int256 newFunding = perpCrucible.currentCumFunding(
-            defaults.wbtcUsdcPerpProductId()
-        );
+        int256 newFunding = perpCrucible.currentCumFunding(defaults.wbtcUsdcPerpProductId());
         assertEq(newFunding, -1e17);
     }
 
@@ -1536,12 +1270,7 @@ contract PerpCrucibleTest is Base_Test {
         uint32 wbtcUsdcPerpProductId = defaults.wbtcUsdcPerpProductId();
         vm.startPrank({msgSender: users.hackerman});
         vm.expectRevert("UNAUTHORIZED");
-        perpCrucible.updatePosition(
-            address(0),
-            aliceSubAccount,
-            wbtcUsdcPerpProductId,
-            btcPerpPos
-        );
+        perpCrucible.updatePosition(address(0), aliceSubAccount, wbtcUsdcPerpProductId, btcPerpPos);
     }
 
     function test_Fail_UpdateCumulativeFundings_Not_Authorised() public {
@@ -1552,12 +1281,8 @@ contract PerpCrucibleTest is Base_Test {
         int256[] memory cumFundings = new int256[](2);
         cumFundings[0] = -1e17;
         cumFundings[1] = -1e17;
-        bytes memory payload = abi.encodePacked(
-            perpIds[0],
-            cumFundings[0],
-            perpIds[1],
-            cumFundings[1]
-        );
+        bytes memory payload =
+            abi.encodePacked(perpIds[0], cumFundings[0], perpIds[1], cumFundings[1]);
         vm.startPrank(users.hackerman);
         vm.expectRevert("UNAUTHORIZED");
 
@@ -1578,11 +1303,7 @@ contract PerpCrucibleTest is Base_Test {
         int256[] memory cumFundings = new int256[](2);
         cumFundings[0] = -1e17;
         cumFundings[1] = -1e17;
-        bytes memory payload = abi.encodePacked(
-            perpIds[0],
-            cumFundings[0],
-            cumFundings[1]
-        );
+        bytes memory payload = abi.encodePacked(perpIds[0], cumFundings[0], cumFundings[1]);
         vm.expectRevert(bytes4(keccak256("OrderByteLengthInvalid()")));
         perpCrucible.updateCumulativeFundings(payload);
     }

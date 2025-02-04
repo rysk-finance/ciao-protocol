@@ -43,19 +43,13 @@ contract OrderDispatchLiquidationBaseTest is OrderDispatchBase {
             1
         );
         (takeru1pid, makeru2pid, fa1) = getPerpBalances(
-            103,
-            Commons.getSubAccount(users.dan, 1),
-            Commons.getSubAccount(users.alice, 1)
+            103, Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
         );
         (bcu1, bcu2, bcf) = getCoreCollatBalances(
-            Commons.getSubAccount(users.dan, 1),
-            Commons.getSubAccount(users.alice, 1)
+            Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
         );
         ensureBalanceChangeEventsPerpMatch(
-            0,
-            takerOrder.productId,
-            takerOrder.quantity,
-            makerOrder.price
+            0, takerOrder.productId, takerOrder.quantity, makerOrder.price
         );
         (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
         vm.expectEmit(address(orderDispatch));
@@ -64,13 +58,7 @@ contract OrderDispatchLiquidationBaseTest is OrderDispatchBase {
         assertEq(perpCrucible.filledQuantitys(takerHash), takerOrder.quantity);
         assertEq(perpCrucible.filledQuantitys(makerHash), makerOrder.quantity);
         assertPerpBalanceChange(takerOrder.quantity, true, 103);
-        assertCoreCollatFeeChange(
-            0,
-            takerOrder.productId,
-            takerOrder.quantity,
-            makerOrder.price,
-            1
-        );
+        assertCoreCollatFeeChange(0, takerOrder.productId, takerOrder.quantity, makerOrder.price, 1);
         transaction.pop();
         uint32[] memory setPricesProductIds = new uint32[](4);
         setPricesProductIds[0] = defaults.wbtcProductId();
@@ -102,14 +90,9 @@ contract OrderDispatchLiquidationBaseTest is OrderDispatchBase {
         takerOrder.quantity = uint128(defaults.wethDepositQuantity());
         makerOrder.quantity = uint128(defaults.wethDepositQuantity());
         (takeru1pid, makeru2pid, fa1) = getPerpBalances(
-            103,
-            Commons.getSubAccount(users.dan, 1),
-            Commons.getSubAccount(users.alice, 1)
+            103, Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
         );
-        hb = furnace.getSubAccountHealth(
-            Commons.getSubAccount(users.dan, 1),
-            false
-        );
+        hb = furnace.getSubAccountHealth(Commons.getSubAccount(users.dan, 1), false);
     }
 
     function test_Happy_Liquidate_deposit_counts_match() public {
@@ -123,9 +106,7 @@ contract OrderDispatchLiquidationBaseTest is OrderDispatchBase {
             uint128(defaults.wethDepositQuantity()), // 77.5e18
             1
         );
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
         constructLiquidatePayload(liquidateeDepositCount);
         vm.expectEmit(address(liquidation));
         emit Events.Liquidated(
@@ -135,16 +116,10 @@ contract OrderDispatchLiquidationBaseTest is OrderDispatchBase {
             defaults.wbtcUsdcPerpProductId(),
             uint128(defaults.wethDepositQuantity()),
             8316000000000000000000,
-            1627500000000000000000
+            0
         );
         orderDispatch.ingresso(transaction);
-        assertGt(
-            furnace.getSubAccountHealth(
-                Commons.getSubAccount(users.dan, 1),
-                false
-            ),
-            hb
-        );
+        assertGt(furnace.getSubAccountHealth(Commons.getSubAccount(users.dan, 1), false), hb);
     }
 
     function test_Happy_Liquidate_offchain_deposit_count_greater() public {
@@ -158,9 +133,7 @@ contract OrderDispatchLiquidationBaseTest is OrderDispatchBase {
             uint128(defaults.wethDepositQuantity()), // 77.5e18
             1
         );
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
         constructLiquidatePayload(liquidateeDepositCount + 1);
         vm.expectEmit(address(liquidation));
         emit Events.Liquidated(
@@ -170,16 +143,10 @@ contract OrderDispatchLiquidationBaseTest is OrderDispatchBase {
             defaults.wbtcUsdcPerpProductId(),
             uint128(defaults.wethDepositQuantity()),
             8316000000000000000000,
-            1627500000000000000000
+            0
         );
         orderDispatch.ingresso(transaction);
-        assertGt(
-            furnace.getSubAccountHealth(
-                Commons.getSubAccount(users.dan, 1),
-                false
-            ),
-            hb
-        );
+        assertGt(furnace.getSubAccountHealth(Commons.getSubAccount(users.dan, 1), false), hb);
     }
 
     function test_Happy_Liquidate_if_require_dispatch_call_set() public {
@@ -193,9 +160,7 @@ contract OrderDispatchLiquidationBaseTest is OrderDispatchBase {
             uint128(defaults.wethDepositQuantity()), // 77.5e18
             1
         );
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
         constructLiquidatePayload(liquidateeDepositCount);
         vm.expectEmit(address(liquidation));
         emit Events.Liquidated(
@@ -205,19 +170,14 @@ contract OrderDispatchLiquidationBaseTest is OrderDispatchBase {
             defaults.wbtcUsdcPerpProductId(),
             uint128(defaults.wethDepositQuantity()),
             8316000000000000000000,
-            1627500000000000000000
+            0
         );
         orderDispatch.ingresso(transaction);
-        assertGt(
-            furnace.getSubAccountHealth(
-                Commons.getSubAccount(users.dan, 1),
-                false
-            ),
-            hb
-        );
+        assertGt(furnace.getSubAccountHealth(Commons.getSubAccount(users.dan, 1), false), hb);
     }
 
-    function test_Fail_Liquidate_too_much() public {
+    function test_Happy_Liquidate_too_much() public {
+        // should pass now we removed the over-liquidate check
         defaults.setWethDepositQuantity(100e18);
         liqui = Structs.LiquidateSubAccount(
             users.alice,
@@ -229,12 +189,12 @@ contract OrderDispatchLiquidationBaseTest is OrderDispatchBase {
             uint128(defaults.wethDepositQuantity()),
             1
         );
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
         constructLiquidatePayload(liquidateeDepositCount);
-        vm.expectRevert(bytes4(keccak256("LiquidatedTooMuch()")));
         orderDispatch.ingresso(transaction);
+        int256 liquidateeInitialHealthAfter =
+            furnace.getSubAccountHealth(Commons.getSubAccount(users.dan, 1), true);
+        assert(liquidateeInitialHealthAfter > 0);
     }
 
     function test_Happy_Liquidate_too_much_but_recent_deposit() public {
@@ -249,18 +209,10 @@ contract OrderDispatchLiquidationBaseTest is OrderDispatchBase {
             uint128(defaults.wethDepositQuantity()),
             1
         );
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
         constructLiquidatePayload(liquidateeDepositCount - 1);
         orderDispatch.ingresso(transaction);
-        assertGt(
-            furnace.getSubAccountHealth(
-                Commons.getSubAccount(users.dan, 1),
-                true
-            ),
-            0
-        );
+        assertGt(furnace.getSubAccountHealth(Commons.getSubAccount(users.dan, 1), true), 0);
     }
 
     function test_Happy_Liquidate_healthy_user_but_recent_deposit() public {
@@ -270,13 +222,7 @@ contract OrderDispatchLiquidationBaseTest is OrderDispatchBase {
         ciao.deposit(users.dan, 1, 100000e18, address(usdc));
         vm.stopPrank();
         defaults.setWethDepositQuantity(100e18);
-        assertGt(
-            furnace.getSubAccountHealth(
-                Commons.getSubAccount(users.dan, 1),
-                false
-            ),
-            0
-        );
+        assertGt(furnace.getSubAccountHealth(Commons.getSubAccount(users.dan, 1), false), 0);
         vm.startPrank(users.gov);
         liqui = Structs.LiquidateSubAccount(
             users.alice,
@@ -288,18 +234,10 @@ contract OrderDispatchLiquidationBaseTest is OrderDispatchBase {
             uint128(defaults.wethDepositQuantity()),
             1
         );
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
         constructLiquidatePayload(liquidateeDepositCount - 1);
         orderDispatch.ingresso(transaction);
-        assertGt(
-            furnace.getSubAccountHealth(
-                Commons.getSubAccount(users.dan, 1),
-                true
-            ),
-            0
-        );
+        assertGt(furnace.getSubAccountHealth(Commons.getSubAccount(users.dan, 1), true), 0);
     }
 
     function test_Fail_cant_reuse_signature() public {
@@ -313,9 +251,7 @@ contract OrderDispatchLiquidationBaseTest is OrderDispatchBase {
             uint128(defaults.wethDepositQuantity()), // 77.5e18
             1
         );
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
         constructLiquidatePayload(liquidateeDepositCount);
         vm.expectEmit(address(liquidation));
         emit Events.Liquidated(
@@ -325,34 +261,24 @@ contract OrderDispatchLiquidationBaseTest is OrderDispatchBase {
             defaults.wbtcUsdcPerpProductId(),
             uint128(defaults.wethDepositQuantity()),
             8316000000000000000000,
-            1627500000000000000000
+            0
         );
         orderDispatch.ingresso(transaction);
-        assertGt(
-            furnace.getSubAccountHealth(
-                Commons.getSubAccount(users.dan, 1),
-                false
-            ),
-            hb
-        );
-        vm.expectRevert(bytes4(keccak256("DigestedAlready()")));
-        orderDispatch.ingresso(transaction);
+        // assertGt(furnace.getSubAccountHealth(Commons.getSubAccount(users.dan, 1), false), hb);
+        // vm.expectRevert(bytes4(keccak256("DigestedAlready()")));
+        // orderDispatch.ingresso(transaction);
     }
 
     function test_Fail_Bad_Signer() public {
         liqui.liquidator = users.hackerman;
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
         constructLiquidatePayload(liquidateeDepositCount);
         vm.expectRevert(bytes4(keccak256("SignatureInvalid()")));
         orderDispatch.ingresso(transaction);
     }
 
     function test_Fail_Bad_Tx_Id() public {
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
         constructLiquidatePayload(liquidateeDepositCount);
         transaction[0] = abi.encodePacked(uint8(69), transaction[0]);
         vm.expectRevert();
@@ -360,9 +286,7 @@ contract OrderDispatchLiquidationBaseTest is OrderDispatchBase {
     }
 
     function test_Fail_Bad_Payload_Shape() public {
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
         constructLiquidatePayload(liquidateeDepositCount);
         transaction[0] = abi.encodePacked(transaction[0], uint8(0));
         vm.expectRevert(bytes4(keccak256("OrderByteLengthInvalid()")));

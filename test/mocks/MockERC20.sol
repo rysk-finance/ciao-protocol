@@ -8,11 +8,9 @@ import "lib/solmate/src/tokens/ERC20.sol";
  *         use this contract in any other context
  */
 contract MockERC20 is ERC20 {
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals
-    ) ERC20(_name, _symbol, _decimals) {}
+    constructor(string memory _name, string memory _symbol, uint8 _decimals)
+        ERC20(_name, _symbol, _decimals)
+    {}
 
     /**
      * @notice Allow others to create new tokens

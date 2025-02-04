@@ -50,10 +50,7 @@ contract OrderDispatchBaseTest is Base_Test {
         );
     }
 
-    function constructMatchOrderPayload(
-        bytes memory takerSig,
-        bytes memory makerSig
-    ) public {
+    function constructMatchOrderPayload(bytes memory takerSig, bytes memory makerSig) public {
         if (makerOrderArr.length > 0) {
             makerOrderArr.pop();
             makerOrderArrBytes.pop();
@@ -92,97 +89,46 @@ contract OrderDispatchBaseTest is Base_Test {
         makerSigs.push(makerSig);
         transaction.push(
             abi.encodePacked(
-                uint8(0),
-                abi.encode(
-                    Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes)
-                )
+                uint8(0), abi.encode(Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes))
             )
         );
     }
 
     function test_Happy_Correct_SignatureFuzz(string memory user) public {
         (address userAddr, uint256 privateKey) = makeAddrAndKey(user);
-        Structs.Order memory order = Structs.Order(
-            userAddr,
-            1,
-            2,
-            true,
-            uint8(0),
-            uint8(1),
-            1,
-            100e18,
-            100e18,
-            1
-        );
+        Structs.Order memory order =
+            Structs.Order(userAddr, 1, 2, true, uint8(0), uint8(1), 1, 100e18, 100e18, 1);
         bytes32 msgHash = keccak256(abi.encode(order)).toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, msgHash);
         bytes memory signature = abi.encodePacked(r, s, v);
         assertEq(signature.length, 65);
-        assertTrue(
-            orderDispatch.checkSignature(userAddr, uint8(0), msgHash, signature)
-        );
+        assertTrue(orderDispatch.checkSignature(userAddr, uint8(0), msgHash, signature));
     }
 
-    function test_Fail_Signature_Not_Match_Sign_SenderFuzz(
-        string memory user
-    ) public {
+    function test_Fail_Signature_Not_Match_Sign_SenderFuzz(string memory user) public {
         (, uint256 privateKey) = makeAddrAndKey("hackerman");
-        (address userAddr, ) = makeAddrAndKey(user);
-        Structs.Order memory order = Structs.Order(
-            userAddr,
-            1,
-            2,
-            true,
-            uint8(0),
-            uint8(1),
-            1,
-            100e18,
-            100e18,
-            1
-        );
+        (address userAddr,) = makeAddrAndKey(user);
+        Structs.Order memory order =
+            Structs.Order(userAddr, 1, 2, true, uint8(0), uint8(1), 1, 100e18, 100e18, 1);
         bytes32 msgHash = keccak256(abi.encode(order)).toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, msgHash);
         bytes memory signature = abi.encodePacked(r, s, v);
         assertEq(signature.length, 65);
-        assertFalse(
-            orderDispatch.checkSignature(userAddr, uint8(0), msgHash, signature)
-        );
+        assertFalse(orderDispatch.checkSignature(userAddr, uint8(0), msgHash, signature));
     }
 
-    function test_Fail_Signature_Not_Match_SenderFuzz(
-        string memory user
-    ) public {
+    function test_Fail_Signature_Not_Match_SenderFuzz(string memory user) public {
         (address userAddr, uint256 privateKey) = makeAddrAndKey(user);
-        Structs.Order memory order = Structs.Order(
-            userAddr,
-            1,
-            2,
-            true,
-            uint8(0),
-            uint8(1),
-            1,
-            100e18,
-            100e18,
-            1
-        );
+        Structs.Order memory order =
+            Structs.Order(userAddr, 1, 2, true, uint8(0), uint8(1), 1, 100e18, 100e18, 1);
         bytes32 msgHash = keccak256(abi.encode(order)).toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, msgHash);
         bytes memory signature = abi.encodePacked(r, s, v);
         assertEq(signature.length, 65);
-        assertFalse(
-            orderDispatch.checkSignature(
-                users.hackerman,
-                uint8(0),
-                msgHash,
-                signature
-            )
-        );
+        assertFalse(orderDispatch.checkSignature(users.hackerman, uint8(0), msgHash, signature));
     }
 
-    function test_Happy_Match_Order_Sig(
-        string memory takerStr,
-        string memory makerStr
-    ) public {
+    function test_Happy_Match_Order_Sig(string memory takerStr, string memory makerStr) public {
         (address taker, uint256 takerPrivateKey) = makeAddrAndKey(takerStr);
         (address maker, uint256 makerPrivateKey) = makeAddrAndKey(makerStr);
         depositAssetsToCiaoForAddresses(taker, maker);
@@ -190,10 +136,7 @@ contract OrderDispatchBaseTest is Base_Test {
         makerOrder.account = maker;
         bytes32 takerMsgHash = orderDispatch.getOrderDigest(takerOrder);
         bytes32 makerMsgHash = orderDispatch.getOrderDigest(makerOrder);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            takerPrivateKey,
-            takerMsgHash
-        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(takerPrivateKey, takerMsgHash);
         bytes memory takerSig = abi.encodePacked(r, s, v);
         (v, r, s) = vm.sign(makerPrivateKey, makerMsgHash);
         bytes memory makerSig = abi.encodePacked(r, s, v);
@@ -205,12 +148,9 @@ contract OrderDispatchBaseTest is Base_Test {
         orderDispatch.ingresso(transaction);
     }
 
-    function test_Fail_Not_Match_Order_Sig(
-        string memory takerStr,
-        string memory makerStr
-    ) public {
-        (address taker, ) = makeAddrAndKey(takerStr);
-        (address maker, ) = makeAddrAndKey(makerStr);
+    function test_Fail_Not_Match_Order_Sig(string memory takerStr, string memory makerStr) public {
+        (address taker,) = makeAddrAndKey(takerStr);
+        (address maker,) = makeAddrAndKey(makerStr);
         (, uint256 hackerman) = makeAddrAndKey("hackerman");
         depositAssetsToCiaoForAddresses(taker, maker);
         bytes32 takerMsgHash = orderDispatch.getOrderDigest(takerOrder);
@@ -226,19 +166,15 @@ contract OrderDispatchBaseTest is Base_Test {
         orderDispatch.ingresso(transaction);
     }
 
-    function test_Fail_Not_Match_Order_Sig_Order(
-        string memory takerStr,
-        string memory makerStr
-    ) public {
+    function test_Fail_Not_Match_Order_Sig_Order(string memory takerStr, string memory makerStr)
+        public
+    {
         (address taker, uint256 takerPrivateKey) = makeAddrAndKey(takerStr);
         (address maker, uint256 makerPrivateKey) = makeAddrAndKey(makerStr);
         depositAssetsToCiaoForAddresses(taker, maker);
         bytes32 takerMsgHash = orderDispatch.getOrderDigest(takerOrder);
         bytes32 makerMsgHash = orderDispatch.getOrderDigest(makerOrder);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            takerPrivateKey,
-            takerMsgHash
-        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(takerPrivateKey, takerMsgHash);
         bytes memory takerSig = abi.encodePacked(r, s, v);
         (v, r, s) = vm.sign(makerPrivateKey, makerMsgHash);
         bytes memory makerSig = abi.encodePacked(r, s, v);
@@ -259,7 +195,7 @@ contract OrderDispatchBaseTest is Base_Test {
         uint128 quantity,
         uint64 nonce
     ) public {
-        (address account, ) = makeAddrAndKey(user);
+        (address account,) = makeAddrAndKey(user);
         takerOrder.account = account;
         takerOrder.subAccountId = subAccountId;
         takerOrder.productId = productId;
@@ -270,7 +206,7 @@ contract OrderDispatchBaseTest is Base_Test {
         takerOrder.price = price;
         takerOrder.quantity = quantity;
         takerOrder.nonce = nonce;
-        (bytes memory signatori, ) = makeOrderSig(takerOrder, user);
+        (bytes memory signatori,) = makeOrderSig(takerOrder, user);
         bytes memory encodedOrder = abi.encodePacked(
             account,
             subAccountId,
@@ -284,10 +220,7 @@ contract OrderDispatchBaseTest is Base_Test {
             nonce,
             signatori
         );
-        (Structs.Order memory order, bytes memory sig) = Parser.parseOrderBytes(
-            encodedOrder,
-            false
-        );
+        (Structs.Order memory order, bytes memory sig) = Parser.parseOrderBytes(encodedOrder, false);
         assertEq(order.account, account);
         assertEq(order.subAccountId, subAccountId);
         assertEq(order.productId, productId);

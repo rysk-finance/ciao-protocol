@@ -41,14 +41,8 @@ contract OrderDispatchBase is Base_Test {
         if (transaction.length > 0) {
             transaction.pop();
         }
-        (bytes memory takerSig, bytes32 takerHash) = makeOrderSig(
-            takerOrder,
-            "dan"
-        );
-        (bytes memory makerSig, bytes32 makerHash) = makeOrderSig(
-            makerOrder,
-            "alice"
-        );
+        (bytes memory takerSig, bytes32 takerHash) = makeOrderSig(takerOrder, "dan");
+        (bytes memory makerSig, bytes32 makerHash) = makeOrderSig(makerOrder, "alice");
         makerOrderArr.push(makerOrder);
         makerOrderArrBytes.push(
             abi.encodePacked(
@@ -81,10 +75,7 @@ contract OrderDispatchBase is Base_Test {
         makerSigs.push(makerSig);
         transaction.push(
             abi.encodePacked(
-                uint8(0),
-                abi.encode(
-                    Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes)
-                )
+                uint8(0), abi.encode(Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes))
             )
         );
         return (takerHash, makerHash);
@@ -97,14 +88,8 @@ contract OrderDispatchBase is Base_Test {
             makerSigs.pop();
         }
         makerOrderArr.push(makerOrder);
-        (bytes memory takerSig, bytes32 takerHash) = makeOrderSig(
-            takerOrder,
-            "dan"
-        );
-        (bytes memory makerSig, bytes32 makerHash) = makeOrderSig(
-            makerOrder,
-            "alice"
-        );
+        (bytes memory takerSig, bytes32 takerHash) = makeOrderSig(takerOrder, "dan");
+        (bytes memory makerSig, bytes32 makerHash) = makeOrderSig(makerOrder, "alice");
         makerOrderArrBytes.push(
             abi.encodePacked(
                 makerOrder.account,
@@ -136,31 +121,19 @@ contract OrderDispatchBase is Base_Test {
         makerSigs.push(makerSig);
         transaction.push(
             abi.encodePacked(
-                uint8(0),
-                abi.encode(
-                    Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes)
-                )
+                uint8(0), abi.encode(Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes))
             )
         );
         return (takerHash, makerHash);
     }
 
-    function appendMakerOrderPayload()
-        public
-        returns (bytes memory, bytes32, bytes32)
-    {
+    function appendMakerOrderPayload() public returns (bytes memory, bytes32, bytes32) {
         if (transaction.length > 0) {
             transaction.pop();
         }
         makerOrderArr.push(makerOrder);
-        (bytes memory takerSig, bytes32 takerHash) = makeOrderSig(
-            takerOrder,
-            "dan"
-        );
-        (bytes memory makerSig, bytes32 makerHash) = makeOrderSig(
-            makerOrder,
-            "alice"
-        );
+        (bytes memory takerSig, bytes32 takerHash) = makeOrderSig(takerOrder, "dan");
+        (bytes memory makerSig, bytes32 makerHash) = makeOrderSig(makerOrder, "alice");
         makerOrderArrBytes.push(
             abi.encodePacked(
                 makerOrder.account,
@@ -192,30 +165,22 @@ contract OrderDispatchBase is Base_Test {
         makerSigs.push(makerSig);
         transaction.push(
             abi.encodePacked(
-                uint8(0),
-                abi.encode(
-                    Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes)
-                )
+                uint8(0), abi.encode(Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes))
             )
         );
         return (
-            abi.encode(
-                Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes)
-            ),
+            abi.encode(Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes)),
             takerHash,
             makerHash
         );
     }
 
-    function constructApproveSignerPayload(
-        string memory user,
-        uint64 nonce
-    ) public {
+    function constructApproveSignerPayload(string memory user, uint64 nonce) public {
         if (transaction.length > 0) {
             transaction.pop();
         }
         approval.nonce = nonce;
-        (bytes memory sig, ) = makeApprovedSignerSig(approval, user);
+        (bytes memory sig,) = makeApprovedSignerSig(approval, user);
         approvalBytes = abi.encodePacked(
             approval.account,
             approval.subAccountId,
@@ -227,12 +192,9 @@ contract OrderDispatchBase is Base_Test {
         transaction.push(abi.encodePacked(uint8(3), approvalBytes));
     }
 
-    function appendApproveSignerPayload(
-        string memory user,
-        uint64 nonce
-    ) public {
+    function appendApproveSignerPayload(string memory user, uint64 nonce) public {
         approval.nonce = nonce;
-        (bytes memory sig, ) = makeApprovedSignerSig(approval, user);
+        (bytes memory sig,) = makeApprovedSignerSig(approval, user);
         approvalBytes = abi.encodePacked(
             approval.account,
             approval.subAccountId,
@@ -255,18 +217,9 @@ contract OrderDispatchBase is Base_Test {
         if (transaction.length > 0) {
             transaction.pop();
         }
-        (bytes memory sig, ) = makeDepositSig(
-            Structs.Deposit(u, said, asset, quantity, uint64(1)),
-            userString
-        );
-        bytes memory depositBytes = abi.encodePacked(
-            u,
-            said,
-            asset,
-            quantity,
-            uint64(1),
-            sig
-        );
+        (bytes memory sig,) =
+            makeDepositSig(Structs.Deposit(u, said, asset, quantity, uint64(1)), userString);
+        bytes memory depositBytes = abi.encodePacked(u, said, asset, quantity, uint64(1), sig);
         transaction.push(abi.encodePacked(uint8(2), depositBytes));
     }
 
@@ -280,26 +233,104 @@ contract OrderDispatchBase is Base_Test {
         if (transaction.length > 0) {
             transaction.pop();
         }
-        (bytes memory sig, ) = makeWithdrawSig(
-            Structs.Withdraw(u, said, asset, uint128(quantity), uint64(1)),
-            userString
+        (bytes memory sig,) = makeWithdrawSig(
+            Structs.Withdraw(u, said, asset, uint128(quantity), uint64(1)), userString
         );
 
-        bytes memory withdrawBytes = abi.encodePacked(
-            u,
-            said,
-            asset,
-            uint128(quantity),
-            uint64(1),
-            sig
-        );
+        bytes memory withdrawBytes =
+            abi.encodePacked(u, said, asset, uint128(quantity), uint64(1), sig);
         transaction.push(abi.encodePacked(uint8(4), withdrawBytes));
     }
 
-    function constructForceSwapPayload(
-        uint8 coreCollatOrLiq,
-        uint64 offChainDepositCount
-    ) public returns (bytes32, bytes32) {
+    function constructAutoDeleveragePayload() public returns (bytes32, bytes32) {
+        if (makerOrderArr.length > 0) {
+            makerOrderArr.pop();
+            makerOrderArrBytes.pop();
+            transaction.pop();
+        }
+        (, bytes32 takerHash) = makeOrderSig(takerOrder, "dan");
+        (, bytes32 makerHash) = makeOrderSig(makerOrder, "alice");
+        makerOrderArr.push(makerOrder);
+        makerOrderArrBytes.push(
+            abi.encodePacked(
+                makerOrder.account,
+                makerOrder.subAccountId,
+                makerOrder.productId,
+                makerOrder.isBuy,
+                makerOrder.orderType,
+                makerOrder.timeInForce,
+                makerOrder.expiration,
+                makerOrder.price,
+                makerOrder.quantity,
+                makerOrder.nonce
+            )
+        );
+        takerOrderBytes = abi.encodePacked(
+            takerOrder.account,
+            takerOrder.subAccountId,
+            takerOrder.productId,
+            takerOrder.isBuy,
+            takerOrder.orderType,
+            takerOrder.timeInForce,
+            takerOrder.expiration,
+            takerOrder.price,
+            takerOrder.quantity,
+            takerOrder.nonce
+        );
+        transaction.push(
+            abi.encodePacked(
+                uint8(8), abi.encode(Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes))
+            )
+        );
+        return (takerHash, makerHash);
+    }
+
+    function appendAutoDeleveragePayload() public returns (bytes32, bytes32) {
+        if (makerOrderArr.length > 0) {
+            makerOrderArr.pop();
+            makerOrderArrBytes.pop();
+        }
+        (, bytes32 takerHash) = makeOrderSig(takerOrder, "dan");
+        (, bytes32 makerHash) = makeOrderSig(makerOrder, "alice");
+        makerOrderArr.push(makerOrder);
+        makerOrderArrBytes.push(
+            abi.encodePacked(
+                makerOrder.account,
+                makerOrder.subAccountId,
+                makerOrder.productId,
+                makerOrder.isBuy,
+                makerOrder.orderType,
+                makerOrder.timeInForce,
+                makerOrder.expiration,
+                makerOrder.price,
+                makerOrder.quantity,
+                makerOrder.nonce
+            )
+        );
+        takerOrderBytes = abi.encodePacked(
+            takerOrder.account,
+            takerOrder.subAccountId,
+            takerOrder.productId,
+            takerOrder.isBuy,
+            takerOrder.orderType,
+            takerOrder.timeInForce,
+            takerOrder.expiration,
+            takerOrder.price,
+            takerOrder.quantity,
+            takerOrder.nonce
+        );
+        transaction.push(
+            abi.encodePacked(
+                uint8(8), abi.encode(Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes))
+            )
+        );
+        return (takerHash, makerHash);
+    }
+
+    function constructForceSwapPayload(uint8 coreCollatOrLiq, uint64 offChainDepositCount)
+        public
+        returns (bytes32, bytes32)
+    {
         if (makerOrderArr.length > 0) {
             makerOrderArr.pop();
             makerOrderArrBytes.pop();
@@ -307,10 +338,7 @@ contract OrderDispatchBase is Base_Test {
             transaction.pop();
         }
         (, bytes32 takerHash) = makeOrderSig(takerOrder, "dan");
-        (bytes memory makerSig, bytes32 makerHash) = makeOrderSig(
-            makerOrder,
-            "alice"
-        );
+        (bytes memory makerSig, bytes32 makerHash) = makeOrderSig(makerOrder, "alice");
         makerOrderArr.push(makerOrder);
         makerOrderArrBytes.push(
             abi.encodePacked(
@@ -345,18 +373,16 @@ contract OrderDispatchBase is Base_Test {
                 uint8(5),
                 uint8(coreCollatOrLiq),
                 uint64(offChainDepositCount),
-                abi.encode(
-                    Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes)
-                )
+                abi.encode(Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes))
             )
         );
         return (takerHash, makerHash);
     }
 
-    function appendForceSwapPayload(
-        uint8 collatOrLiq,
-        uint64 offChainDepositCount
-    ) public returns (bytes32, bytes32) {
+    function appendForceSwapPayload(uint8 collatOrLiq, uint64 offChainDepositCount)
+        public
+        returns (bytes32, bytes32)
+    {
         if (makerOrderArr.length > 0) {
             makerOrderArr.pop();
             makerOrderArrBytes.pop();
@@ -364,10 +390,7 @@ contract OrderDispatchBase is Base_Test {
         }
         makerOrderArr.push(makerOrder);
         (, bytes32 takerHash) = makeOrderSig(takerOrder, "dan");
-        (bytes memory makerSig, bytes32 makerHash) = makeOrderSig(
-            makerOrder,
-            "alice"
-        );
+        (bytes memory makerSig, bytes32 makerHash) = makeOrderSig(makerOrder, "alice");
         makerOrderArrBytes.push(
             abi.encodePacked(
                 makerOrder.account,
@@ -401,27 +424,22 @@ contract OrderDispatchBase is Base_Test {
                 uint8(5),
                 uint8(collatOrLiq),
                 uint64(offChainDepositCount),
-                abi.encode(
-                    Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes)
-                )
+                abi.encode(Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes))
             )
         );
         return (takerHash, makerHash);
     }
 
-    function appendForceSwapMakerPayload(
-        uint8 collatOrLiq,
-        uint64 offChainDepositCount
-    ) public returns (bytes32, bytes32) {
+    function appendForceSwapMakerPayload(uint8 collatOrLiq, uint64 offChainDepositCount)
+        public
+        returns (bytes32, bytes32)
+    {
         if (transaction.length > 0) {
             transaction.pop();
         }
         makerOrderArr.push(makerOrder);
         (, bytes32 takerHash) = makeOrderSig(takerOrder, "dan");
-        (bytes memory makerSig, bytes32 makerHash) = makeOrderSig(
-            makerOrder,
-            "alice"
-        );
+        (bytes memory makerSig, bytes32 makerHash) = makeOrderSig(makerOrder, "alice");
         makerOrderArrBytes.push(
             abi.encodePacked(
                 makerOrder.account,
@@ -455,9 +473,7 @@ contract OrderDispatchBase is Base_Test {
                 uint8(5),
                 uint8(collatOrLiq),
                 uint64(offChainDepositCount),
-                abi.encode(
-                    Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes)
-                )
+                abi.encode(Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes))
             )
         );
         return (takerHash, makerHash);
@@ -467,7 +483,7 @@ contract OrderDispatchBase is Base_Test {
         if (transaction.length > 0) {
             transaction.pop();
         }
-        (bytes memory sig, ) = makeLiquidateSig(liqui, "alice");
+        (bytes memory sig,) = makeLiquidateSig(liqui, "alice");
 
         bytes memory liquidateBytes = abi.encodePacked(
             uint8(6),

@@ -16,17 +16,15 @@ contract MockMarginDirective {
         int256 initCumFunding,
         int256 currentCumFunding
     ) external pure returns (int256 health) {
-        return
-            MarginDirective.getPerpMarginHealth(
-                isInitial,
-                productRiskWeights,
-                quantity,
-                avgEntryPrice,
-                isLong,
-                markPrice,
-                initCumFunding,
-                currentCumFunding
-            );
+        return MarginDirective.getPerpMarginHealth(
+            isInitial,
+            productRiskWeights,
+            quantity,
+            avgEntryPrice,
+            isLong,
+            markPrice,
+            initCumFunding,
+            currentCumFunding
+        );
     }
-
 }

@@ -11,7 +11,7 @@ import "lib/openzeppelin-contracts/contracts/proxy/transparent/TransparentUpgrad
 import {Base_Test} from "../../Base.t.sol";
 import {Structs} from "src/contracts/interfaces/Structs.sol";
 
-contract OrderDispatchBaseTest is Base_Test, EIP712("Ciao", "0.0.0") {
+contract OrderDispatchBaseTest is Base_Test, EIP712("100x", "0.0.0") {
     using MessageHashUtils for bytes32;
 
     Structs.Order public takerOrder;
@@ -53,10 +53,7 @@ contract OrderDispatchBaseTest is Base_Test, EIP712("Ciao", "0.0.0") {
         );
     }
 
-    function constructMatchOrderPayload(
-        bytes memory takerSig,
-        bytes memory makerSig
-    ) public {
+    function constructMatchOrderPayload(bytes memory takerSig, bytes memory makerSig) public {
         if (makerOrderArr.length > 0) {
             makerOrderArr.pop();
             makerOrderArrBytes.pop();
@@ -95,10 +92,7 @@ contract OrderDispatchBaseTest is Base_Test, EIP712("Ciao", "0.0.0") {
         makerSigs.push(makerSig);
         transaction.push(
             abi.encodePacked(
-                uint8(0),
-                abi.encode(
-                    Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes)
-                )
+                uint8(0), abi.encode(Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes))
             )
         );
     }
@@ -111,21 +105,10 @@ contract OrderDispatchBaseTest is Base_Test, EIP712("Ciao", "0.0.0") {
     function test_Happy_ProxyAdmin_Can_Upgrade() public {
         address newOrderDispatchImpl = address(new OrderDispatch());
         proxyAdmin.upgradeAndCall(
-            ITransparentUpgradeableProxy(address(proxy)),
-            newOrderDispatchImpl,
-            bytes("")
+            ITransparentUpgradeableProxy(address(proxy)), newOrderDispatchImpl, bytes("")
         );
         assertEq(
-            address(
-                uint160(
-                    uint256(
-                        vm.load(
-                            address(proxy),
-                            ERC1967Utils.IMPLEMENTATION_SLOT
-                        )
-                    )
-                )
-            ),
+            address(uint160(uint256(vm.load(address(proxy), ERC1967Utils.IMPLEMENTATION_SLOT)))),
             newOrderDispatchImpl
         );
     }
@@ -135,10 +118,7 @@ contract OrderDispatchBaseTest is Base_Test, EIP712("Ciao", "0.0.0") {
         (, uint256 makerPrivateKey) = makeAddrAndKey("alice");
         bytes32 takerMsgHash = orderDispatch.getOrderDigest(takerOrder);
         bytes32 makerMsgHash = orderDispatch.getOrderDigest(makerOrder);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            takerPrivateKey,
-            takerMsgHash
-        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(takerPrivateKey, takerMsgHash);
         bytes memory takerSig = abi.encodePacked(r, s, v);
         (v, r, s) = vm.sign(makerPrivateKey, makerMsgHash);
         bytes memory makerSig = abi.encodePacked(r, s, v);
@@ -146,21 +126,10 @@ contract OrderDispatchBaseTest is Base_Test, EIP712("Ciao", "0.0.0") {
         assertEq(makerSig.length, 65);
         address newOrderDispatchImpl = address(new OrderDispatch());
         proxyAdmin.upgradeAndCall(
-            ITransparentUpgradeableProxy(address(proxy)),
-            newOrderDispatchImpl,
-            bytes("")
+            ITransparentUpgradeableProxy(address(proxy)), newOrderDispatchImpl, bytes("")
         );
         assertEq(
-            address(
-                uint160(
-                    uint256(
-                        vm.load(
-                            address(proxy),
-                            ERC1967Utils.IMPLEMENTATION_SLOT
-                        )
-                    )
-                )
-            ),
+            address(uint160(uint256(vm.load(address(proxy), ERC1967Utils.IMPLEMENTATION_SLOT)))),
             newOrderDispatchImpl
         );
         constructMatchOrderPayload(takerSig, makerSig);
@@ -175,113 +144,51 @@ contract OrderDispatchBaseTest is Base_Test, EIP712("Ciao", "0.0.0") {
         proxyAdmin.upgradeAndCall(
             ITransparentUpgradeableProxy(address(proxy)),
             newOrderDispatchImpl,
-            abi.encodeCall(OrderDispatch.initialize, address(users.gov))
+            abi.encodeCall(OrderDispatch.initialize, (address(users.gov)))
         );
     }
 
     function test_Fail_Non_ProxyAdmin_Owner_Cannot_Upgrade() public {
         vm.expectRevert(
-            abi.encodeWithSelector(
-                bytes4(0x118cdaa7),
-                0x89aFFa3D814BDC8244c4F5F555396d6B97217085
-            )
+            abi.encodeWithSelector(bytes4(0x118cdaa7), 0x89aFFa3D814BDC8244c4F5F555396d6B97217085)
         );
         vm.startPrank(users.hackerman);
         proxyAdmin.upgradeAndCall(
-            ITransparentUpgradeableProxy(address(proxy)),
-            users.hackerman,
-            "0x0"
+            ITransparentUpgradeableProxy(address(proxy)), users.hackerman, "0x0"
         );
     }
 
     function test_Happy_Correct_Signature() public {
-        Structs.Order memory order = Structs.Order(
-            users.gov,
-            1,
-            2,
-            true,
-            uint8(0),
-            uint8(1),
-            1,
-            100e18,
-            100e18,
-            1
-        );
+        Structs.Order memory order =
+            Structs.Order(users.gov, 1, 2, true, uint8(0), uint8(1), 1, 100e18, 100e18, 1);
         (, uint256 privateKey) = makeAddrAndKey("gov");
-        bytes32 msgHash = _hashTypedDataV4(
-            keccak256(abi.encode(order)).toEthSignedMessageHash()
-        );
+        bytes32 msgHash = _hashTypedDataV4(keccak256(abi.encode(order)).toEthSignedMessageHash());
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, msgHash);
         bytes memory signature = abi.encodePacked(r, s, v);
         assertEq(signature.length, 65);
-        assertTrue(
-            orderDispatch.checkSignature(
-                users.gov,
-                uint8(0),
-                msgHash,
-                signature
-            )
-        );
+        assertTrue(orderDispatch.checkSignature(users.gov, uint8(0), msgHash, signature));
     }
 
     function test_Fail_Signature_Not_Match_Sign_Sender() public {
-        Structs.Order memory order = Structs.Order(
-            users.gov,
-            1,
-            2,
-            true,
-            uint8(0),
-            uint8(1),
-            1,
-            100e18,
-            100e18,
-            1
-        );
+        Structs.Order memory order =
+            Structs.Order(users.gov, 1, 2, true, uint8(0), uint8(1), 1, 100e18, 100e18, 1);
         (, uint256 privateKey) = makeAddrAndKey("hackerman");
-        bytes32 msgHash = _hashTypedDataV4(
-            keccak256(abi.encode(order)).toEthSignedMessageHash()
-        );
+        bytes32 msgHash = _hashTypedDataV4(keccak256(abi.encode(order)).toEthSignedMessageHash());
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, msgHash);
         bytes memory signature = abi.encodePacked(r, s, v);
         assertEq(signature.length, 65);
-        assertFalse(
-            orderDispatch.checkSignature(
-                users.gov,
-                uint8(0),
-                msgHash,
-                signature
-            )
-        );
+        assertFalse(orderDispatch.checkSignature(users.gov, uint8(0), msgHash, signature));
     }
 
     function test_Fail_Signature_Not_Match_Sender() public {
-        Structs.Order memory order = Structs.Order(
-            users.gov,
-            1,
-            2,
-            true,
-            uint8(0),
-            uint8(1),
-            1,
-            100e18,
-            100e18,
-            1
-        );
+        Structs.Order memory order =
+            Structs.Order(users.gov, 1, 2, true, uint8(0), uint8(1), 1, 100e18, 100e18, 1);
         (, uint256 privateKey) = makeAddrAndKey("gov");
-        bytes32 msgHash = _hashTypedDataV4(
-            keccak256(abi.encode(order)).toEthSignedMessageHash()
-        );
+        bytes32 msgHash = _hashTypedDataV4(keccak256(abi.encode(order)).toEthSignedMessageHash());
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, msgHash);
         bytes memory signature = abi.encodePacked(r, s, v);
         assertEq(signature.length, 65);
-        assertFalse(
-            orderDispatch.checkSignature(
-                users.hackerman,
-                uint8(0),
-                msgHash,
-                signature
-            )
-        );
+        assertFalse(orderDispatch.checkSignature(users.hackerman, uint8(0), msgHash, signature));
     }
 
     function test_Happy_Match_Order_Sig() public {
@@ -289,10 +196,7 @@ contract OrderDispatchBaseTest is Base_Test, EIP712("Ciao", "0.0.0") {
         (, uint256 makerPrivateKey) = makeAddrAndKey("alice");
         bytes32 takerMsgHash = orderDispatch.getOrderDigest(takerOrder);
         bytes32 makerMsgHash = orderDispatch.getOrderDigest(makerOrder);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            takerPrivateKey,
-            takerMsgHash
-        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(takerPrivateKey, takerMsgHash);
         bytes memory takerSig = abi.encodePacked(r, s, v);
         (v, r, s) = vm.sign(makerPrivateKey, makerMsgHash);
         bytes memory makerSig = abi.encodePacked(r, s, v);
@@ -309,10 +213,7 @@ contract OrderDispatchBaseTest is Base_Test, EIP712("Ciao", "0.0.0") {
         (, uint256 makerPrivateKey) = makeAddrAndKey("alice");
         bytes32 takerMsgHash = orderDispatch.getOrderDigest(takerOrder);
         bytes32 makerMsgHash = orderDispatch.getOrderDigest(makerOrder);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            takerPrivateKey,
-            takerMsgHash
-        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(takerPrivateKey, takerMsgHash);
         bytes memory takerSig = abi.encodePacked(r, s, v);
         (v, r, s) = vm.sign(makerPrivateKey, makerMsgHash);
         bytes memory makerSig = abi.encodePacked(r, s, v);
@@ -340,10 +241,7 @@ contract OrderDispatchBaseTest is Base_Test, EIP712("Ciao", "0.0.0") {
         (, uint256 makerPrivateKey) = makeAddrAndKey("alice");
         bytes32 takerMsgHash = orderDispatch.getOrderDigest(takerOrder);
         bytes32 makerMsgHash = orderDispatch.getOrderDigest(makerOrder);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            takerPrivateKey,
-            takerMsgHash
-        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(takerPrivateKey, takerMsgHash);
         bytes memory takerSig = abi.encodePacked(r, s, v);
         (v, r, s) = vm.sign(makerPrivateKey, makerMsgHash);
         bytes memory makerSig = abi.encodePacked(r, s, v);
@@ -359,10 +257,7 @@ contract OrderDispatchBaseTest is Base_Test, EIP712("Ciao", "0.0.0") {
         (, uint256 makerPrivateKey) = makeAddrAndKey("dan");
         bytes32 takerMsgHash = orderDispatch.getOrderDigest(takerOrder);
         bytes32 makerMsgHash = orderDispatch.getOrderDigest(makerOrder);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            takerPrivateKey,
-            takerMsgHash
-        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(takerPrivateKey, takerMsgHash);
         bytes memory takerSig = abi.encodePacked(r, s, v);
         (v, r, s) = vm.sign(makerPrivateKey, makerMsgHash);
         bytes memory makerSig = abi.encodePacked(r, s, v);
@@ -378,10 +273,7 @@ contract OrderDispatchBaseTest is Base_Test, EIP712("Ciao", "0.0.0") {
         (, uint256 makerPrivateKey) = makeAddrAndKey("dan");
         bytes32 takerMsgHash = orderDispatch.getOrderDigest(takerOrder);
         bytes32 makerMsgHash = orderDispatch.getOrderDigest(makerOrder);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            takerPrivateKey,
-            takerMsgHash
-        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(takerPrivateKey, takerMsgHash);
         bytes memory takerSig = abi.encodePacked(r, s, v);
         (v, r, s) = vm.sign(makerPrivateKey, makerMsgHash);
         bytes memory makerSig = abi.encodePacked(r, s, v);
@@ -393,7 +285,7 @@ contract OrderDispatchBaseTest is Base_Test, EIP712("Ciao", "0.0.0") {
     }
 
     function test_Fail_Order_Parser_Overflow() public {
-        (bytes memory signatori, ) = makeOrderSig(takerOrder, "alice");
+        (bytes memory signatori,) = makeOrderSig(takerOrder, "alice");
         bytes memory encodedOrder = abi.encodePacked(
             takerOrder.account,
             takerOrder.subAccountId,

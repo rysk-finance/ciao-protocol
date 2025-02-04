@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Furnace} from "src/contracts/Furnace.sol";
+import {Events} from "src/contracts/interfaces/Events.sol";
 import {PerpCrucible} from "src/contracts/crucible/perp-crucible/PerpCrucible.sol";
 import {Commons} from "src/contracts/libraries/Commons.sol";
 import {Structs} from "src/contracts/interfaces/Structs.sol";
@@ -16,16 +17,8 @@ contract FurnaceSubaccountHealthTest is Base_Test {
     function test_Happy_calculateSubaccountHealth() public {
         validateAssets();
 
-        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(
-            2000e18,
-            10e18,
-            true
-        );
-        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(
-            30000e18,
-            2e18,
-            false
-        );
+        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(2000e18, 10e18, true);
+        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(30000e18, 2e18, false);
         uint256 usdcSpotQuantity = 0;
         uint256 wethSpotQuantity = 32e18; // 32
         uint256 wbtcSpotQuantity = 42e7; //4.2
@@ -57,23 +50,15 @@ contract FurnaceSubaccountHealthTest is Base_Test {
         int256[] memory cumFundings = new int256[](2);
         cumFundings[0] = -1e17;
         cumFundings[1] = -1e17;
-        bytes memory payload = abi.encodePacked(
-            perpIds[0],
-            cumFundings[0],
-            perpIds[1],
-            cumFundings[1]
-        );
+        bytes memory payload =
+            abi.encodePacked(perpIds[0], cumFundings[0], perpIds[1], cumFundings[1]);
         perpCrucible.updateCumulativeFundings(payload);
 
-        int256 maintenanceHealth1 = furnace.getSubAccountHealth(
-            Commons.getSubAccount(users.alice, 1),
-            false
-        );
+        int256 maintenanceHealth1 =
+            furnace.getSubAccountHealth(Commons.getSubAccount(users.alice, 1), false);
 
-        int256 initialHealth1 = furnace.getSubAccountHealth(
-            Commons.getSubAccount(users.alice, 1),
-            true
-        );
+        int256 initialHealth1 =
+            furnace.getSubAccountHealth(Commons.getSubAccount(users.alice, 1), true);
 
         assertEq(maintenanceHealth1, 1789193e17);
         assertEq(initialHealth1, 1640078e17);
@@ -84,16 +69,8 @@ contract FurnaceSubaccountHealthTest is Base_Test {
         validateAssets();
         furnace.setSpreadPenalty(address(wbtc), 1e18, 1e18);
 
-        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(
-            2000e18,
-            10e18,
-            true
-        );
-        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(
-            30000e18,
-            2e18,
-            false
-        );
+        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(2000e18, 10e18, true);
+        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(30000e18, 2e18, false);
         uint256 usdcSpotQuantity = 0;
         uint256 wethSpotQuantity = 32e18; // 32
         uint256 wbtcSpotQuantity = 42e7; //4.2
@@ -125,23 +102,15 @@ contract FurnaceSubaccountHealthTest is Base_Test {
         int256[] memory cumFundings = new int256[](2);
         cumFundings[0] = -1e17;
         cumFundings[1] = -1e17;
-        bytes memory payload = abi.encodePacked(
-            perpIds[0],
-            cumFundings[0],
-            perpIds[1],
-            cumFundings[1]
-        );
+        bytes memory payload =
+            abi.encodePacked(perpIds[0], cumFundings[0], perpIds[1], cumFundings[1]);
         perpCrucible.updateCumulativeFundings(payload);
 
-        int256 maintenanceHealth1 = furnace.getSubAccountHealth(
-            Commons.getSubAccount(users.alice, 1),
-            false
-        );
+        int256 maintenanceHealth1 =
+            furnace.getSubAccountHealth(Commons.getSubAccount(users.alice, 1), false);
 
-        int256 initialHealth1 = furnace.getSubAccountHealth(
-            Commons.getSubAccount(users.alice, 1),
-            true
-        );
+        int256 initialHealth1 =
+            furnace.getSubAccountHealth(Commons.getSubAccount(users.alice, 1), true);
 
         assertEq(maintenanceHealth1, 1706128e17);
         assertEq(initialHealth1, 1473948e17);
@@ -151,16 +120,8 @@ contract FurnaceSubaccountHealthTest is Base_Test {
     function test_Happy_calculateSubaccountHealth_With_Usdc() public {
         validateAssets();
 
-        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(
-            2000e18,
-            10e18,
-            true
-        );
-        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(
-            30000e18,
-            2e18,
-            false
-        );
+        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(2000e18, 10e18, true);
+        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(30000e18, 2e18, false);
         uint256 usdcSpotQuantity = 1000 * 10 ** usdc.decimals();
         uint256 wethSpotQuantity = 32e18; // 32
         uint256 wbtcSpotQuantity = 42e7; //4.2
@@ -192,18 +153,11 @@ contract FurnaceSubaccountHealthTest is Base_Test {
         int256[] memory cumFundings = new int256[](2);
         cumFundings[0] = -1e17;
         cumFundings[1] = -1e17;
-        bytes memory payload = abi.encodePacked(
-            perpIds[0],
-            cumFundings[0],
-            perpIds[1],
-            cumFundings[1]
-        );
+        bytes memory payload =
+            abi.encodePacked(perpIds[0], cumFundings[0], perpIds[1], cumFundings[1]);
         perpCrucible.updateCumulativeFundings(payload);
 
-        int256 health1 = furnace.getSubAccountHealth(
-            Commons.getSubAccount(users.alice, 1),
-            false
-        );
+        int256 health1 = furnace.getSubAccountHealth(Commons.getSubAccount(users.alice, 1), false);
 
         assertEq(health1, 1799193e17);
     }
@@ -211,16 +165,8 @@ contract FurnaceSubaccountHealthTest is Base_Test {
     function test_Happy_calculateSubaccountHealth_With_Debt() public {
         validateAssets();
 
-        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(
-            2000e18,
-            10e18,
-            true
-        );
-        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(
-            30000e18,
-            2e18,
-            false
-        );
+        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(2000e18, 10e18, true);
+        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(30000e18, 2e18, false);
         uint256 usdcSpotQuantity = 0;
         uint256 wethSpotQuantity = 32e18; // 32
         uint256 wbtcSpotQuantity = 42e7; //4.2
@@ -244,10 +190,7 @@ contract FurnaceSubaccountHealthTest is Base_Test {
             wethUsdcPerpPrice,
             wbtcUsdcPerpPrice
         );
-        ciao.settleCoreCollateral(
-            Commons.getSubAccount(users.alice, 1),
-            -200e18
-        );
+        ciao.settleCoreCollateral(Commons.getSubAccount(users.alice, 1), -200e18);
         // update funding snapshots
         uint32[] memory perpIds = new uint32[](2);
         perpIds[0] = defaults.wbtcUsdcPerpProductId();
@@ -255,18 +198,11 @@ contract FurnaceSubaccountHealthTest is Base_Test {
         int256[] memory cumFundings = new int256[](2);
         cumFundings[0] = -1e17;
         cumFundings[1] = -1e17;
-        bytes memory payload = abi.encodePacked(
-            perpIds[0],
-            cumFundings[0],
-            perpIds[1],
-            cumFundings[1]
-        );
+        bytes memory payload =
+            abi.encodePacked(perpIds[0], cumFundings[0], perpIds[1], cumFundings[1]);
         perpCrucible.updateCumulativeFundings(payload);
 
-        int256 health1 = furnace.getSubAccountHealth(
-            Commons.getSubAccount(users.alice, 1),
-            false
-        );
+        int256 health1 = furnace.getSubAccountHealth(Commons.getSubAccount(users.alice, 1), false);
 
         assertEq(health1, 1787193e17);
     }
@@ -274,16 +210,8 @@ contract FurnaceSubaccountHealthTest is Base_Test {
     function test_Happy_calculateSubaccountHealth2() public {
         validateAssets();
 
-        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(
-            2500e18,
-            30e18,
-            false
-        );
-        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(
-            29000e18,
-            2e18,
-            false
-        );
+        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(2500e18, 30e18, false);
+        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(29000e18, 2e18, false);
         uint256 usdcSpotQuantity = 0;
         uint256 wethSpotQuantity = 20e18; // 20
         uint256 wbtcSpotQuantity = 0;
@@ -315,23 +243,15 @@ contract FurnaceSubaccountHealthTest is Base_Test {
         int256[] memory cumFundings = new int256[](2);
         cumFundings[0] = 1e17;
         cumFundings[1] = -5e17;
-        bytes memory payload = abi.encodePacked(
-            perpIds[0],
-            cumFundings[0],
-            perpIds[1],
-            cumFundings[1]
-        );
+        bytes memory payload =
+            abi.encodePacked(perpIds[0], cumFundings[0], perpIds[1], cumFundings[1]);
         perpCrucible.updateCumulativeFundings(payload);
 
-        int256 maintenanceHealth2 = furnace.getSubAccountHealth(
-            Commons.getSubAccount(users.alice, 1),
-            false
-        );
+        int256 maintenanceHealth2 =
+            furnace.getSubAccountHealth(Commons.getSubAccount(users.alice, 1), false);
 
-        int256 initialHealth2 = furnace.getSubAccountHealth(
-            Commons.getSubAccount(users.alice, 1),
-            true
-        );
+        int256 initialHealth2 =
+            furnace.getSubAccountHealth(Commons.getSubAccount(users.alice, 1), true);
 
         assertEq(maintenanceHealth2, 515507e17);
         assertEq(initialHealth2, 470162e17);
@@ -341,16 +261,8 @@ contract FurnaceSubaccountHealthTest is Base_Test {
     function test_Happy_calculateSubaccountHealth3() public {
         validateAssets();
 
-        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(
-            2000e18,
-            10e18,
-            true
-        );
-        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(
-            30000e18,
-            2e18,
-            false
-        );
+        Structs.NewPosition memory ethPerpPos = Structs.NewPosition(2000e18, 10e18, true);
+        Structs.NewPosition memory btcPerpPos = Structs.NewPosition(30000e18, 2e18, false);
         uint256 usdcSpotQuantity = 0;
         uint256 wethSpotQuantity = 32e18; // 32
         uint256 wbtcSpotQuantity = 32e7; // 3.2
@@ -382,23 +294,15 @@ contract FurnaceSubaccountHealthTest is Base_Test {
         int256[] memory cumFundings = new int256[](2);
         cumFundings[0] = -1e17;
         cumFundings[1] = -1e17;
-        bytes memory payload = abi.encodePacked(
-            perpIds[0],
-            cumFundings[0],
-            perpIds[1],
-            cumFundings[1]
-        );
+        bytes memory payload =
+            abi.encodePacked(perpIds[0], cumFundings[0], perpIds[1], cumFundings[1]);
         perpCrucible.updateCumulativeFundings(payload);
 
-        int256 maintenanceHealth3 = furnace.getSubAccountHealth(
-            Commons.getSubAccount(users.alice, 1),
-            false
-        );
+        int256 maintenanceHealth3 =
+            furnace.getSubAccountHealth(Commons.getSubAccount(users.alice, 1), false);
 
-        int256 initialHealth3 = furnace.getSubAccountHealth(
-            Commons.getSubAccount(users.alice, 1),
-            true
-        );
+        int256 initialHealth3 =
+            furnace.getSubAccountHealth(Commons.getSubAccount(users.alice, 1), true);
 
         assertEq(maintenanceHealth3, 1522343e17);
         assertEq(initialHealth3, 1402878e17);
@@ -464,12 +368,8 @@ contract FurnaceSubaccountHealthTest is Base_Test {
 
     function test_Fail_SetSpotRiskWeightNotAuthorised() public {
         address btcSpot = address(wbtc);
-        Structs.ProductRiskWeights memory weights = Structs.ProductRiskWeights(
-            1e18,
-            1e18,
-            1e18,
-            1e18
-        );
+        Structs.ProductRiskWeights memory weights =
+            Structs.ProductRiskWeights(1e18, 1e18, 1e18, 1e18);
         vm.startPrank(users.hackerman);
         vm.expectRevert("UNAUTHORIZED");
 
@@ -478,12 +378,8 @@ contract FurnaceSubaccountHealthTest is Base_Test {
 
     function test_Fail_setProductRiskWeightNotAuthorised() public {
         uint32 id = defaults.wbtcProductId();
-        Structs.ProductRiskWeights memory weights = Structs.ProductRiskWeights(
-            1e18,
-            1e18,
-            1e18,
-            1e18
-        );
+        Structs.ProductRiskWeights memory weights =
+            Structs.ProductRiskWeights(1e18, 1e18, 1e18, 1e18);
         vm.startPrank(users.hackerman);
         vm.expectRevert("UNAUTHORIZED");
 
@@ -540,12 +436,8 @@ contract FurnaceSubaccountHealthTest is Base_Test {
 
     function test_Happy_SetSpotRiskWeight() public {
         address btcSpot = address(wbtc);
-        Structs.ProductRiskWeights memory weights = Structs.ProductRiskWeights(
-            69e16,
-            69e16,
-            69e16,
-            69e16
-        );
+        Structs.ProductRiskWeights memory weights =
+            Structs.ProductRiskWeights(69e16, 69e16, 69e16, 69e16);
 
         furnace.setSpotRiskWeight(btcSpot, weights);
         (
@@ -563,12 +455,8 @@ contract FurnaceSubaccountHealthTest is Base_Test {
 
     function test_Happy_setProductRiskWeight() public {
         uint32 id = defaults.wbtcProductId();
-        Structs.ProductRiskWeights memory weights = Structs.ProductRiskWeights(
-            69e16,
-            69e16,
-            69e16,
-            69e16
-        );
+        Structs.ProductRiskWeights memory weights =
+            Structs.ProductRiskWeights(69e16, 69e16, 69e16, 69e16);
 
         furnace.setProductRiskWeight(id, weights);
         (

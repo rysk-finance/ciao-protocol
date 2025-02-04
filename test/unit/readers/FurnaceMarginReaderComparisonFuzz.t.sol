@@ -17,9 +17,7 @@ contract FurnaceSubaccountHealthTestFuzz is Base_Test {
         Base_Test.setUp();
         deployCiao();
         marginReader = new MarginReader();
-        userAndSystemStateReader = new UserAndSystemStateReader(
-            address(addressManifest)
-        );
+        userAndSystemStateReader = new UserAndSystemStateReader(address(addressManifest));
     }
 
     function testFuzz_Happy_calculateSubaccountHealth(
@@ -49,15 +47,10 @@ contract FurnaceSubaccountHealthTestFuzz is Base_Test {
         vm.assume(wbtcSpotPrice < 10000000000000000e18);
         vm.assume(wethUsdcPerpPrice < 10000000000000000e18);
         vm.assume(wbtcUsdcPerpPrice < 10000000000000000e18);
-        vm.assume(
-            wethCumFunding < 10000000000000000e18 &&
-                wethCumFunding > -10000000000000000e18
-        );
-        vm.assume(
-            wbtcCumFunding < 10000000000000000e18 &&
-                wbtcCumFunding > -10000000000000000e18
-        );
-
+        vm.assume(wethCumFunding < 10000000000000000e18 && wethCumFunding > -10000000000000000e18);
+        vm.assume(wbtcCumFunding < 10000000000000000e18 && wbtcCumFunding > -10000000000000000e18);
+        wethSpotQuantity = 0;
+        wbtcSpotQuantity = 0;
         setAlicePositions(
             wbtcCumFunding,
             wethCumFunding,
@@ -72,40 +65,25 @@ contract FurnaceSubaccountHealthTestFuzz is Base_Test {
             wbtcUsdcPerpPrice
         );
 
-        int256 furnaceHealth = furnace.getSubAccountHealth(
-            Commons.getSubAccount(users.alice, 1),
-            false
-        );
-        Structs.UserAndSystemState memory u = userAndSystemStateReader
-            .acquireUserAndSystemState(Commons.getSubAccount(users.alice, 1));
+        int256 furnaceHealth =
+            furnace.getSubAccountHealth(Commons.getSubAccount(users.alice, 1), false);
+        Structs.UserAndSystemState memory u =
+            userAndSystemStateReader.CompileUserPositions(users.alice, 1);
         int256 marginReaderHealth = marginReader.getSubAccountMargin(false, u);
         assertEq(furnaceHealth, marginReaderHealth);
         assertEq(furnace.prices(defaults.wbtcProductId()), wbtcSpotPrice);
         assertEq(furnace.prices(defaults.wethProductId()), wethSpotPrice);
-        assertEq(
-            furnace.prices(defaults.wbtcUsdcPerpProductId()),
-            wbtcUsdcPerpPrice
-        );
-        assertEq(
-            furnace.prices(defaults.wethUsdcPerpProductId()),
-            wethUsdcPerpPrice
-        );
-        assertEq(
-            perpCrucible.currentCumFunding(defaults.wbtcUsdcPerpProductId()),
-            wbtcCumFunding
-        );
-        assertEq(
-            perpCrucible.currentCumFunding(defaults.wethUsdcPerpProductId()),
-            wethCumFunding
-        );
+        assertEq(furnace.prices(defaults.wbtcUsdcPerpProductId()), wbtcUsdcPerpPrice);
+        assertEq(furnace.prices(defaults.wethUsdcPerpProductId()), wethUsdcPerpPrice);
+        assertEq(perpCrucible.currentCumFunding(defaults.wbtcUsdcPerpProductId()), wbtcCumFunding);
+        assertEq(perpCrucible.currentCumFunding(defaults.wethUsdcPerpProductId()), wethCumFunding);
 
         assertEq(
             ciao.balances(Commons.getSubAccount(users.alice, 1), address(wbtc)),
             wbtcSpotQuantity * 1e10
         );
         assertEq(
-            ciao.balances(Commons.getSubAccount(users.alice, 1), address(weth)),
-            wethSpotQuantity
+            ciao.balances(Commons.getSubAccount(users.alice, 1), address(weth)), wethSpotQuantity
         );
     }
 }

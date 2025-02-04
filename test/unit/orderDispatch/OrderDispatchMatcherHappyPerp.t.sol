@@ -42,13 +42,10 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             1
         );
         (takeru1pid, makeru2pid, fa1) = getPerpBalances(
-            102,
-            Commons.getSubAccount(users.dan, 1),
-            Commons.getSubAccount(users.alice, 1)
+            102, Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
         );
         (bcu1, bcu2, bcf) = getCoreCollatBalances(
-            Commons.getSubAccount(users.dan, 1),
-            Commons.getSubAccount(users.alice, 1)
+            Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
         );
         uint32[] memory setPricesProductIds = new uint32[](4);
         setPricesProductIds[0] = defaults.wbtcProductId();
@@ -79,10 +76,7 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
 
     function test_Happy_Match_Order_Sig() public {
         ensureBalanceChangeEventsPerpMatch(
-            0,
-            takerOrder.productId,
-            takerOrder.quantity,
-            makerOrder.price
+            0, takerOrder.productId, takerOrder.quantity, makerOrder.price
         );
         (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
         vm.expectEmit(address(orderDispatch));
@@ -91,23 +85,306 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         assertEq(perpCrucible.filledQuantitys(takerHash), takerOrder.quantity);
         assertEq(perpCrucible.filledQuantitys(makerHash), makerOrder.quantity);
         assertPerpBalanceChange(takerOrder.quantity, true, 102);
-        assertCoreCollatFeeChange(
-            0,
-            takerOrder.productId,
-            takerOrder.quantity,
-            makerOrder.price,
-            1
+        assertCoreCollatFeeChange(0, takerOrder.productId, takerOrder.quantity, makerOrder.price, 1);
+    }
+
+    function test_Happy_Match_Order_Sig_Red() public {
+        ensureBalanceChangeEventsPerpMatch(
+            0, takerOrder.productId, takerOrder.quantity, makerOrder.price
         );
+        (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
+        vm.expectEmit(address(orderDispatch));
+        emit Events.OrderMatched(takerHash, makerHash);
+        orderDispatch.ingresso(transaction);
+        assertEq(perpCrucible.filledQuantitys(takerHash), takerOrder.quantity);
+        assertEq(perpCrucible.filledQuantitys(makerHash), makerOrder.quantity);
+        assertPerpBalanceChange(takerOrder.quantity, true, 102);
+        assertCoreCollatFeeChange(0, takerOrder.productId, takerOrder.quantity, makerOrder.price, 1);
+        makerOrder.isBuy = true;
+        takerOrder.isBuy = false;
+        takerOrder.orderType = 3;
+        uint256 originalTakerQuantity = takerOrder.quantity;
+        makerOrder.quantity = 100e18;
+        takerOrder.quantity = 100e18;
+        (takeru1pid, makeru2pid, fa1) = getPerpBalances(
+            102, Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
+        );
+        ( takerHash,  makerHash) = constructMatchOrderPayload();
+        vm.expectEmit(address(orderDispatch));
+        emit Events.OrderMatched(takerHash, makerHash);
+        orderDispatch.ingresso(transaction);
+        assertEq(perpCrucible.filledQuantitys(takerHash), originalTakerQuantity);
+        assertEq(perpCrucible.filledQuantitys(makerHash), originalTakerQuantity);
+        (,uint256 takerQ,,) = perpCrucible.subAccountPositions(
+            102, Commons.getSubAccount(users.dan, 1)
+        );
+        (,uint256 makerQ,,) =  perpCrucible.subAccountPositions(
+            102, Commons.getSubAccount(users.alice, 1)
+        );
+        assertEq(takerQ, 0);
+        assertEq(makerQ, 0);
+    }
+
+    function test_Happy_Match_Order_Sig_Red_Over_T() public {
+        ensureBalanceChangeEventsPerpMatch(
+            0, takerOrder.productId, takerOrder.quantity, makerOrder.price
+        );
+        (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
+        vm.expectEmit(address(orderDispatch));
+        emit Events.OrderMatched(takerHash, makerHash);
+        orderDispatch.ingresso(transaction);
+        assertEq(perpCrucible.filledQuantitys(takerHash), takerOrder.quantity);
+        assertEq(perpCrucible.filledQuantitys(makerHash), makerOrder.quantity);
+        assertPerpBalanceChange(takerOrder.quantity, true, 102);
+        assertCoreCollatFeeChange(0, takerOrder.productId, takerOrder.quantity, makerOrder.price, 1);
+        makerOrder.isBuy = true;
+        takerOrder.isBuy = false;
+        takerOrder.orderType = 3;
+        uint256 originalTakerQuantity = takerOrder.quantity;
+        makerOrder.quantity = 105e18;
+        takerOrder.quantity = 105e18;
+        (takeru1pid, makeru2pid, fa1) = getPerpBalances(
+            102, Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
+        );
+        ( takerHash,  makerHash) = constructMatchOrderPayload();
+        vm.expectEmit(address(orderDispatch));
+        emit Events.OrderMatched(takerHash, makerHash);
+        orderDispatch.ingresso(transaction);
+        assertEq(perpCrucible.filledQuantitys(takerHash), originalTakerQuantity);
+        assertEq(perpCrucible.filledQuantitys(makerHash), originalTakerQuantity);
+        (,uint256 takerQ,,) = perpCrucible.subAccountPositions(
+            102, Commons.getSubAccount(users.dan, 1)
+        );
+        (,uint256 makerQ,,) =  perpCrucible.subAccountPositions(
+            102, Commons.getSubAccount(users.alice, 1)
+        );
+        assertEq(takerQ, 0);
+        assertEq(makerQ, 0);
+    }
+
+    function test_Happy_Match_Order_Sig_Red_Over_M() public {
+        ensureBalanceChangeEventsPerpMatch(
+            0, takerOrder.productId, takerOrder.quantity, makerOrder.price
+        );
+        (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
+        vm.expectEmit(address(orderDispatch));
+        emit Events.OrderMatched(takerHash, makerHash);
+        orderDispatch.ingresso(transaction);
+        assertEq(perpCrucible.filledQuantitys(takerHash), takerOrder.quantity);
+        assertEq(perpCrucible.filledQuantitys(makerHash), makerOrder.quantity);
+        assertPerpBalanceChange(takerOrder.quantity, true, 102);
+        assertCoreCollatFeeChange(0, takerOrder.productId, takerOrder.quantity, makerOrder.price, 1);
+        makerOrder.isBuy = true;
+        takerOrder.isBuy = false;
+        makerOrder.orderType = 7;
+        uint256 originalTakerQuantity = takerOrder.quantity;
+        makerOrder.quantity = 105e18;
+        takerOrder.quantity = 105e18;
+        (takeru1pid, makeru2pid, fa1) = getPerpBalances(
+            102, Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
+        );
+        ( takerHash,  makerHash) = constructMatchOrderPayload();
+        vm.expectEmit(address(orderDispatch));
+        emit Events.OrderMatched(takerHash, makerHash);
+        orderDispatch.ingresso(transaction);
+        assertEq(perpCrucible.filledQuantitys(takerHash), originalTakerQuantity);
+        assertEq(perpCrucible.filledQuantitys(makerHash), originalTakerQuantity);
+        (,uint256 takerQ,,) = perpCrucible.subAccountPositions(
+            102, Commons.getSubAccount(users.dan, 1)
+        );
+        (,uint256 makerQ,,) =  perpCrucible.subAccountPositions(
+            102, Commons.getSubAccount(users.alice, 1)
+        );
+        assertEq(takerQ, 0);
+        assertEq(makerQ, 0);
+    }
+
+    function test_Happy_Match_Order_Sig_Red_Over_M_Under_T() public {
+        ensureBalanceChangeEventsPerpMatch(
+            0, takerOrder.productId, takerOrder.quantity, makerOrder.price
+        );
+        (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
+        vm.expectEmit(address(orderDispatch));
+        emit Events.OrderMatched(takerHash, makerHash);
+        orderDispatch.ingresso(transaction);
+        assertEq(perpCrucible.filledQuantitys(takerHash), takerOrder.quantity);
+        assertEq(perpCrucible.filledQuantitys(makerHash), makerOrder.quantity);
+        assertPerpBalanceChange(takerOrder.quantity, true, 102);
+        assertCoreCollatFeeChange(0, takerOrder.productId, takerOrder.quantity, makerOrder.price, 1);
+        makerOrder.isBuy = true;
+        takerOrder.isBuy = false;
+        makerOrder.orderType = 7;
+        makerOrder.quantity = 105e18;
+        takerOrder.quantity = 10e18;
+        (takeru1pid, makeru2pid, fa1) = getPerpBalances(
+            102, Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
+        );
+        ( takerHash,  makerHash) = constructMatchOrderPayload();
+        vm.expectEmit(address(orderDispatch));
+        emit Events.OrderMatched(takerHash, makerHash);
+        orderDispatch.ingresso(transaction);
+        assertEq(perpCrucible.filledQuantitys(takerHash), 10e18);
+        assertEq(perpCrucible.filledQuantitys(makerHash), 10e18);
+        (,uint256 takerQ,,) = perpCrucible.subAccountPositions(
+            102, Commons.getSubAccount(users.dan, 1)
+        );
+        (,uint256 makerQ,,) =  perpCrucible.subAccountPositions(
+            102, Commons.getSubAccount(users.alice, 1)
+        );
+        assertEq(takerQ, 90e18);
+        assertEq(makerQ, 90e18);
+    }
+
+    function test_Happy_Match_Order_Sig_Red_Partial_M() public {
+        ensureBalanceChangeEventsPerpMatch(
+            0, takerOrder.productId, takerOrder.quantity, makerOrder.price
+        );
+        (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
+        vm.expectEmit(address(orderDispatch));
+        emit Events.OrderMatched(takerHash, makerHash);
+        orderDispatch.ingresso(transaction);
+        assertEq(perpCrucible.filledQuantitys(takerHash), takerOrder.quantity);
+        assertEq(perpCrucible.filledQuantitys(makerHash), makerOrder.quantity);
+        assertPerpBalanceChange(takerOrder.quantity, true, 102);
+        assertCoreCollatFeeChange(0, takerOrder.productId, takerOrder.quantity, makerOrder.price, 1);
+        makerOrder.isBuy = true;
+        takerOrder.isBuy = false;
+        takerOrder.orderType = 3;
+        makerOrder.quantity = 1000e18;
+        takerOrder.quantity = 5e18;
+        (takeru1pid, makeru2pid, fa1) = getPerpBalances(
+            102, Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
+        );
+        ( takerHash,  makerHash) = constructMatchOrderPayload();
+        vm.expectEmit(address(orderDispatch));
+        emit Events.OrderMatched(takerHash, makerHash);
+        orderDispatch.ingresso(transaction);
+        assertEq(perpCrucible.filledQuantitys(takerHash), 5e18);
+        assertEq(perpCrucible.filledQuantitys(makerHash), 5e18);
+        (,uint256 takerQ,,) = perpCrucible.subAccountPositions(
+            102, Commons.getSubAccount(users.dan, 1)
+        );
+        (,uint256 makerQ,,) =  perpCrucible.subAccountPositions(
+            102, Commons.getSubAccount(users.alice, 1)
+        );
+        assertEq(takerQ, 95e18);
+        assertEq(makerQ, 95e18);
+    }
+
+    function test_Happy_Match_Order_Sig_Red_Partial_T() public {
+        ensureBalanceChangeEventsPerpMatch(
+            0, takerOrder.productId, takerOrder.quantity, makerOrder.price
+        );
+        (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
+        vm.expectEmit(address(orderDispatch));
+        emit Events.OrderMatched(takerHash, makerHash);
+        orderDispatch.ingresso(transaction);
+        assertEq(perpCrucible.filledQuantitys(takerHash), takerOrder.quantity);
+        assertEq(perpCrucible.filledQuantitys(makerHash), makerOrder.quantity);
+        assertPerpBalanceChange(takerOrder.quantity, true, 102);
+        assertCoreCollatFeeChange(0, takerOrder.productId, takerOrder.quantity, makerOrder.price, 1);
+        makerOrder.isBuy = true;
+        takerOrder.isBuy = false;
+        takerOrder.orderType = 3;
+        makerOrder.quantity = 5e18;
+        takerOrder.quantity = 1000e18;
+        (takeru1pid, makeru2pid, fa1) = getPerpBalances(
+            102, Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
+        );
+        ( takerHash,  makerHash) = constructMatchOrderPayload();
+        vm.expectEmit(address(orderDispatch));
+        emit Events.OrderMatched(takerHash, makerHash);
+        orderDispatch.ingresso(transaction);
+        assertEq(perpCrucible.filledQuantitys(takerHash), 5e18);
+        assertEq(perpCrucible.filledQuantitys(makerHash), 5e18);
+        (,uint256 takerQ,,) = perpCrucible.subAccountPositions(
+            102, Commons.getSubAccount(users.dan, 1)
+        );
+        (,uint256 makerQ,,) =  perpCrucible.subAccountPositions(
+            102, Commons.getSubAccount(users.alice, 1)
+        );
+        assertEq(takerQ, 95e18);
+        assertEq(makerQ, 95e18);
+    }
+
+    function test_Happy_Match_Order_Sig_Red_M_Partial_T() public {
+        ensureBalanceChangeEventsPerpMatch(
+            0, takerOrder.productId, takerOrder.quantity, makerOrder.price
+        );
+        (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
+        vm.expectEmit(address(orderDispatch));
+        emit Events.OrderMatched(takerHash, makerHash);
+        orderDispatch.ingresso(transaction);
+        assertEq(perpCrucible.filledQuantitys(takerHash), takerOrder.quantity);
+        assertEq(perpCrucible.filledQuantitys(makerHash), makerOrder.quantity);
+        assertPerpBalanceChange(takerOrder.quantity, true, 102);
+        assertCoreCollatFeeChange(0, takerOrder.productId, takerOrder.quantity, makerOrder.price, 1);
+        makerOrder.isBuy = true;
+        takerOrder.isBuy = false;
+        makerOrder.orderType = 3;
+        makerOrder.quantity = 5e18;
+        takerOrder.quantity = 1000e18;
+        (takeru1pid, makeru2pid, fa1) = getPerpBalances(
+            102, Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
+        );
+        ( takerHash,  makerHash) = constructMatchOrderPayload();
+        vm.expectEmit(address(orderDispatch));
+        emit Events.OrderMatched(takerHash, makerHash);
+        orderDispatch.ingresso(transaction);
+        assertEq(perpCrucible.filledQuantitys(takerHash), 5e18);
+        assertEq(perpCrucible.filledQuantitys(makerHash), 5e18);
+        (,uint256 takerQ,,) = perpCrucible.subAccountPositions(
+            102, Commons.getSubAccount(users.dan, 1)
+        );
+        (,uint256 makerQ,,) =  perpCrucible.subAccountPositions(
+            102, Commons.getSubAccount(users.alice, 1)
+        );
+        assertEq(takerQ, 95e18);
+        assertEq(makerQ, 95e18);
+    }
+
+    function test_Happy_Match_Order_Sig_Red_Both_Smaller_M() public {
+        ensureBalanceChangeEventsPerpMatch(
+            0, takerOrder.productId, takerOrder.quantity, makerOrder.price
+        );
+        (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
+        vm.expectEmit(address(orderDispatch));
+        emit Events.OrderMatched(takerHash, makerHash);
+        orderDispatch.ingresso(transaction);
+        assertEq(perpCrucible.filledQuantitys(takerHash), takerOrder.quantity);
+        assertEq(perpCrucible.filledQuantitys(makerHash), makerOrder.quantity);
+        assertPerpBalanceChange(takerOrder.quantity, true, 102);
+        assertCoreCollatFeeChange(0, takerOrder.productId, takerOrder.quantity, makerOrder.price, 1);
+        makerOrder.isBuy = true;
+        takerOrder.isBuy = false;
+        takerOrder.orderType = 5;
+        makerOrder.orderType = 3;
+        makerOrder.quantity = 4e18;
+        takerOrder.quantity = 5e18;
+        (takeru1pid, makeru2pid, fa1) = getPerpBalances(
+            102, Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
+        );
+        ( takerHash,  makerHash) = constructMatchOrderPayload();
+        vm.expectEmit(address(orderDispatch));
+        emit Events.OrderMatched(takerHash, makerHash);
+        orderDispatch.ingresso(transaction);
+        assertEq(perpCrucible.filledQuantitys(takerHash), 4e18);
+        assertEq(perpCrucible.filledQuantitys(makerHash), 4e18);
+        (,uint256 takerQ,,) = perpCrucible.subAccountPositions(
+            102, Commons.getSubAccount(users.dan, 1)
+        );
+        (,uint256 makerQ,,) =  perpCrucible.subAccountPositions(
+            102, Commons.getSubAccount(users.alice, 1)
+        );
+        assertEq(takerQ, 96e18);
+        assertEq(makerQ, 96e18);
     }
 
     function test_Happy_Match_Order_Sig_Maker_Long() public {
         makerOrder.isBuy = true;
         takerOrder.isBuy = false;
         ensureBalanceChangeEventsPerpMatch(
-            0,
-            takerOrder.productId,
-            takerOrder.quantity,
-            makerOrder.price
+            0, takerOrder.productId, takerOrder.quantity, makerOrder.price
         );
         (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
         vm.expectEmit(address(orderDispatch));
@@ -116,13 +393,7 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         assertEq(perpCrucible.filledQuantitys(takerHash), takerOrder.quantity);
         assertEq(perpCrucible.filledQuantitys(makerHash), makerOrder.quantity);
         assertPerpBalanceChange(takerOrder.quantity, false, 102);
-        assertCoreCollatFeeChange(
-            0,
-            takerOrder.productId,
-            takerOrder.quantity,
-            makerOrder.price,
-            1
-        );
+        assertCoreCollatFeeChange(0, takerOrder.productId, takerOrder.quantity, makerOrder.price, 1);
     }
 
     function test_Happy_Match_Order_partial_for_maker() public {
@@ -131,10 +402,7 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         uint256 wethDeposit = uint256(defaults.wethDepositQuantity() / 4);
         takerOrder.quantity = uint128(wethDeposit);
         ensureBalanceChangeEventsPerpMatch(
-            0,
-            takerOrder.productId,
-            uint256(defaults.wethDepositQuantity() / 4),
-            makerOrder.price
+            0, takerOrder.productId, uint256(defaults.wethDepositQuantity() / 4), makerOrder.price
         );
         (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
         vm.expectEmit(address(orderDispatch));
@@ -142,11 +410,7 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         orderDispatch.ingresso(transaction);
         assertEq(perpCrucible.filledQuantitys(takerHash), wethDeposit);
         assertEq(perpCrucible.filledQuantitys(makerHash), wethDeposit);
-        assertPerpBalanceChange(
-            uint256(defaults.wethDepositQuantity() / 4),
-            true,
-            102
-        );
+        assertPerpBalanceChange(uint256(defaults.wethDepositQuantity() / 4), true, 102);
         assertCoreCollatFeeChange(
             0,
             takerOrder.productId,
@@ -157,29 +421,15 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         // complete the fill for the maker
         wethDeposit = uint256((defaults.wethDepositQuantity() * 3) / 4);
         takerOrder.quantity = uint128(wethDeposit);
-        ensureBalanceChangeEventsPerpMatch(
-            0,
-            takerOrder.productId,
-            wethDeposit,
-            makerOrder.price
-        );
+        ensureBalanceChangeEventsPerpMatch(0, takerOrder.productId, wethDeposit, makerOrder.price);
         (takerHash, makerHash) = constructMatchOrderPayload();
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
         assertEq(perpCrucible.filledQuantitys(takerHash), wethDeposit);
-        assertEq(
-            perpCrucible.filledQuantitys(makerHash),
-            defaults.wethDepositQuantity()
-        );
+        assertEq(perpCrucible.filledQuantitys(makerHash), defaults.wethDepositQuantity());
         assertPerpBalanceChange(defaults.wethDepositQuantity(), true, 102);
-        assertCoreCollatFeeChange(
-            0,
-            takerOrder.productId,
-            wethDeposit,
-            makerOrder.price,
-            1
-        );
+        assertCoreCollatFeeChange(0, takerOrder.productId, wethDeposit, makerOrder.price, 1);
     }
 
     function test_Happy_Match_Order_partial_for_taker() public {
@@ -188,78 +438,42 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         takerOrder.price = 110e18;
         uint256 wethDeposit = uint256(defaults.wethDepositQuantity() / 5);
         makerOrder.quantity = uint128(wethDeposit);
-        ensureBalanceChangeEventsPerpMatch(
-            0,
-            takerOrder.productId,
-            wethDeposit,
-            makerOrder.price
-        );
+        ensureBalanceChangeEventsPerpMatch(0, takerOrder.productId, wethDeposit, makerOrder.price);
         (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
         assertEq(perpCrucible.filledQuantitys(takerHash), wethDeposit);
         assertEq(perpCrucible.filledQuantitys(makerHash), wethDeposit);
-        assertPerpBalanceChange(
-            uint256(defaults.wethDepositQuantity() / 5),
-            true,
-            102
-        );
-        assertCoreCollatFeeChange(
-            0,
-            takerOrder.productId,
-            wethDeposit,
-            makerOrder.price,
-            1
-        );
+        assertPerpBalanceChange(uint256(defaults.wethDepositQuantity() / 5), true, 102);
+        assertCoreCollatFeeChange(0, takerOrder.productId, wethDeposit, makerOrder.price, 1);
         // complete the fill for the maker
         wethDeposit = uint256((defaults.wethDepositQuantity() * 4) / 5);
         makerOrder.quantity = uint128(wethDeposit);
-        ensureBalanceChangeEventsPerpMatch(
-            0,
-            takerOrder.productId,
-            wethDeposit,
-            makerOrder.price
-        );
+        ensureBalanceChangeEventsPerpMatch(0, takerOrder.productId, wethDeposit, makerOrder.price);
         (takerHash, makerHash) = constructMatchOrderPayload();
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
-        assertEq(
-            perpCrucible.filledQuantitys(takerHash),
-            defaults.wethDepositQuantity()
-        );
+        assertEq(perpCrucible.filledQuantitys(takerHash), defaults.wethDepositQuantity());
         assertEq(perpCrucible.filledQuantitys(makerHash), wethDeposit);
         assertPerpBalanceChange(defaults.wethDepositQuantity(), true, 102);
-        assertCoreCollatFeeChange(
-            0,
-            takerOrder.productId,
-            wethDeposit,
-            makerOrder.price,
-            1
-        );
+        assertCoreCollatFeeChange(0, takerOrder.productId, wethDeposit, makerOrder.price, 1);
     }
 
-    function test_Happy_Batch_Match_Order_partial_for_taker_multiple_makers()
-        public
-    {
+    function test_Happy_Batch_Match_Order_partial_for_taker_multiple_makers() public {
         makerOrder.price = 100e18;
         takerOrder.price = 110e18;
         uint256 wethDeposit = uint256(defaults.wethDepositQuantity() / 4);
-        ensureBalanceChangeEventsPerpMatch(
-            0,
-            takerOrder.productId,
-            wethDeposit,
-            makerOrder.price
-        );
+        ensureBalanceChangeEventsPerpMatch(0, takerOrder.productId, wethDeposit, makerOrder.price);
         makerOrder.quantity = uint128(wethDeposit);
         (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
         makerOrder.nonce = 2;
-        (, , bytes32 makerHash2) = appendMakerOrderPayload();
-         makerOrder.nonce = 3;
-        (, , bytes32 makerHash3) = appendMakerOrderPayload();
-         makerOrder.nonce = 4;
-        (, , bytes32 makerHash4) = appendMakerOrderPayload();
+        (,, bytes32 makerHash2) = appendMakerOrderPayload();
+        makerOrder.nonce = 3;
+        (,, bytes32 makerHash3) = appendMakerOrderPayload();
+        makerOrder.nonce = 4;
+        (,, bytes32 makerHash4) = appendMakerOrderPayload();
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         vm.expectEmit(address(orderDispatch));
@@ -269,7 +483,7 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash4);
         orderDispatch.ingresso(transaction);
-        
+
         assertEq(perpCrucible.filledQuantitys(takerHash), wethDeposit * 4);
         assertEq(perpCrucible.filledQuantitys(makerHash), wethDeposit);
         assertEq(perpCrucible.filledQuantitys(makerHash2), wethDeposit);
@@ -277,31 +491,18 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         assertEq(perpCrucible.filledQuantitys(makerHash4), wethDeposit);
 
         assertPerpBalanceChange(wethDeposit * 4, true, 102);
-        assertCoreCollatFeeChange(
-            0,
-            takerOrder.productId,
-            wethDeposit * 4,
-            makerOrder.price,
-            1
-        );
+        assertCoreCollatFeeChange(0, takerOrder.productId, wethDeposit * 4, makerOrder.price, 1);
     }
 
-    function test_Happy_Batch_Match_Order_partial_for_maker_multiple_takers()
-        public
-    {
+    function test_Happy_Batch_Match_Order_partial_for_maker_multiple_takers() public {
         makerOrder.price = 100e18;
         takerOrder.price = 110e18;
         uint256 wethDeposit = uint256(defaults.wethDepositQuantity() / 2);
         takerOrder.quantity = uint128(wethDeposit);
-        ensureBalanceChangeEventsPerpMatch(
-            0,
-            takerOrder.productId,
-            wethDeposit,
-            makerOrder.price
-        );
+        ensureBalanceChangeEventsPerpMatch(0, takerOrder.productId, wethDeposit, makerOrder.price);
         (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
         takerOrder.nonce = 2;
-        (bytes32 takerHash2, ) = appendMatchOrderPayload();
+        (bytes32 takerHash2,) = appendMatchOrderPayload();
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         vm.expectEmit(address(orderDispatch));
@@ -311,13 +512,7 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         assertEq(perpCrucible.filledQuantitys(takerHash), wethDeposit);
         assertEq(perpCrucible.filledQuantitys(takerHash2), wethDeposit);
         assertPerpBalanceChange(wethDeposit * 2, true, 102);
-        assertCoreCollatFeeChange(
-            0,
-            takerOrder.productId,
-            wethDeposit * 2,
-            makerOrder.price,
-            2
-        );
+        assertCoreCollatFeeChange(0, takerOrder.productId, wethDeposit * 2, makerOrder.price, 2);
     }
 
     function test_Happy_Match_Order_partial_for_maker_too_much() public {
@@ -325,12 +520,7 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         takerOrder.price = 110e18;
         uint256 wethDeposit = uint256(defaults.wethDepositQuantity() / 4);
         takerOrder.quantity = uint128(wethDeposit);
-        ensureBalanceChangeEventsPerpMatch(
-            0,
-            takerOrder.productId,
-            wethDeposit,
-            makerOrder.price
-        );
+        ensureBalanceChangeEventsPerpMatch(0, takerOrder.productId, wethDeposit, makerOrder.price);
         (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
@@ -343,44 +533,24 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         takerOrder.quantity = uint128(wethDeposit);
         (takerHash, makerHash) = constructMatchOrderPayload();
         ensureBalanceChangeEventsPerpMatch(
-            0,
-            takerOrder.productId,
-            (wethDeposit * 3) / 4,
-            makerOrder.price
+            0, takerOrder.productId, (wethDeposit * 3) / 4, makerOrder.price
         );
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
-        assertEq(
-            perpCrucible.filledQuantitys(takerHash),
-            (wethDeposit * 3) / 4
-        );
-        assertEq(
-            perpCrucible.filledQuantitys(makerHash),
-            defaults.wethDepositQuantity()
-        );
+        assertEq(perpCrucible.filledQuantitys(takerHash), (wethDeposit * 3) / 4);
+        assertEq(perpCrucible.filledQuantitys(makerHash), defaults.wethDepositQuantity());
         assertPerpBalanceChange(wethDeposit, true, 102);
-        assertCoreCollatFeeChange(
-            0,
-            takerOrder.productId,
-            wethDeposit,
-            makerOrder.price,
-            2
-        );
+        assertCoreCollatFeeChange(0, takerOrder.productId, wethDeposit, makerOrder.price, 2);
     }
 
-    function test_Happy_Match_Order_maker_BUY_maker_price_more_than_taker()
-        public
-    {
+    function test_Happy_Match_Order_maker_BUY_maker_price_more_than_taker() public {
         makerOrder.isBuy = true;
         takerOrder.isBuy = false;
         makerOrder.price = 110e18;
         takerOrder.price = 100e18;
         ensureBalanceChangeEventsPerpMatch(
-            0,
-            takerOrder.productId,
-            takerOrder.quantity,
-            makerOrder.price
+            0, takerOrder.productId, takerOrder.quantity, makerOrder.price
         );
         (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
         vm.expectEmit(address(orderDispatch));
@@ -389,27 +559,16 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         assertEq(perpCrucible.filledQuantitys(takerHash), takerOrder.quantity);
         assertEq(perpCrucible.filledQuantitys(makerHash), makerOrder.quantity);
         assertPerpBalanceChange(takerOrder.quantity, false, 102);
-        assertCoreCollatFeeChange(
-            0,
-            takerOrder.productId,
-            takerOrder.quantity,
-            makerOrder.price,
-            1
-        );
+        assertCoreCollatFeeChange(0, takerOrder.productId, takerOrder.quantity, makerOrder.price, 1);
     }
 
-    function test_Happy_Match_Order_taker_BUY_taker_price_more_than_maker()
-        public
-    {
+    function test_Happy_Match_Order_taker_BUY_taker_price_more_than_maker() public {
         makerOrder.isBuy = false;
         takerOrder.isBuy = true;
         makerOrder.price = 100e18;
         takerOrder.price = 110e18;
         ensureBalanceChangeEventsPerpMatch(
-            0,
-            takerOrder.productId,
-            takerOrder.quantity,
-            makerOrder.price
+            0, takerOrder.productId, takerOrder.quantity, makerOrder.price
         );
         (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
         vm.expectEmit(address(orderDispatch));
@@ -418,12 +577,6 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         assertEq(perpCrucible.filledQuantitys(takerHash), takerOrder.quantity);
         assertEq(perpCrucible.filledQuantitys(makerHash), makerOrder.quantity);
         assertPerpBalanceChange(takerOrder.quantity, true, 102);
-        assertCoreCollatFeeChange(
-            0,
-            takerOrder.productId,
-            takerOrder.quantity,
-            makerOrder.price,
-            1
-        );
+        assertCoreCollatFeeChange(0, takerOrder.productId, takerOrder.quantity, makerOrder.price, 1);
     }
 }

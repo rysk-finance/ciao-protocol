@@ -16,13 +16,7 @@ contract OrderDispatchDepositBaseTest is OrderDispatchBase {
     function setUp() public virtual override {
         OrderDispatchBase.setUp();
         deployOrderDispatch();
-        approval = Structs.ApproveSigner(
-            users.alice,
-            1,
-            users.keeper,
-            true,
-            uint64(2)
-        );
+        approval = Structs.ApproveSigner(users.alice, 1, users.keeper, true, uint64(2));
         takerOrder = Structs.Order(
             users.dan,
             1,
@@ -62,55 +56,29 @@ contract OrderDispatchDepositBaseTest is OrderDispatchBase {
         vm.stopPrank();
         vm.startPrank(users.gov);
         address subAccount = Commons.getSubAccount(users.alice, 0);
-        expectCallToTransferFrom(
-            users.alice,
-            address(ciao),
-            defaults.usdcDepositQuantity()
-        );
+        expectCallToTransferFrom(users.alice, address(ciao), defaults.usdcDepositQuantity());
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             subAccount,
             address(usdc),
             int256(ciao.balances(subAccount, address(usdc))),
-            int256(ciao.balances(subAccount, address(usdc))) +
-                int256(
-                    Commons.convertToE18(
-                        defaults.usdcDepositQuantity(),
-                        usdc.decimals()
-                    )
-                )
+            int256(ciao.balances(subAccount, address(usdc)))
+                + int256(Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals()))
         );
         vm.expectEmit(address(ciao));
-        emit Events.Deposit(
-            users.alice,
-            0,
-            address(usdc),
-            defaults.usdcDepositQuantity()
-        );
+        emit Events.Deposit(users.alice, 0, address(usdc), defaults.usdcDepositQuantity());
         constructDepositPayload(
-            users.alice,
-            0,
-            defaults.usdcDepositQuantity(),
-            address(usdc),
-            "alice"
+            users.alice, 0, defaults.usdcDepositQuantity(), address(usdc), "alice"
         );
         orderDispatch.ingresso(transaction);
         assertEq(
             ciao.balances(subAccount, address(usdc)),
-            Commons.convertToE18(
-                defaults.usdcDepositQuantity(),
-                usdc.decimals()
-            )
+            Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals())
         );
         assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(usdc)));
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0),
-            address(usdc)
-        );
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(usdc));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 1);
-        address[] memory subAccountAssets = ciao.getSubAccountAssets(
-            subAccount
-        );
+        address[] memory subAccountAssets = ciao.getSubAccountAssets(subAccount);
         assertEq(subAccountAssets[0], address(usdc));
         assertEq(subAccountAssets.length, 1);
     }
@@ -121,55 +89,29 @@ contract OrderDispatchDepositBaseTest is OrderDispatchBase {
         vm.stopPrank();
         vm.startPrank(users.gov);
         address subAccount = Commons.getSubAccount(users.alice, 0);
-        expectCallToTransferFrom(
-            users.alice,
-            address(ciao),
-            defaults.usdcDepositQuantity()
-        );
+        expectCallToTransferFrom(users.alice, address(ciao), defaults.usdcDepositQuantity());
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             subAccount,
             address(usdc),
             int256(ciao.balances(subAccount, address(usdc))),
-            int256(ciao.balances(subAccount, address(usdc))) +
-                int256(
-                    Commons.convertToE18(
-                        defaults.usdcDepositQuantity(),
-                        usdc.decimals()
-                    )
-                )
+            int256(ciao.balances(subAccount, address(usdc)))
+                + int256(Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals()))
         );
         vm.expectEmit(address(ciao));
-        emit Events.Deposit(
-            users.alice,
-            0,
-            address(usdc),
-            defaults.usdcDepositQuantity()
-        );
+        emit Events.Deposit(users.alice, 0, address(usdc), defaults.usdcDepositQuantity());
         constructDepositPayload(
-            users.alice,
-            0,
-            defaults.usdcDepositQuantity(),
-            address(usdc),
-            "alice"
+            users.alice, 0, defaults.usdcDepositQuantity(), address(usdc), "alice"
         );
         orderDispatch.ingresso(transaction);
         assertEq(
             ciao.balances(subAccount, address(usdc)),
-            Commons.convertToE18(
-                defaults.usdcDepositQuantity(),
-                usdc.decimals()
-            )
+            Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals())
         );
         assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(usdc)));
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0),
-            address(usdc)
-        );
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(usdc));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 1);
-        address[] memory subAccountAssets = ciao.getSubAccountAssets(
-            subAccount
-        );
+        address[] memory subAccountAssets = ciao.getSubAccountAssets(subAccount);
         assertEq(subAccountAssets[0], address(usdc));
         assertEq(subAccountAssets.length, 1);
         vm.expectRevert(bytes4(keccak256("DigestedAlready()")));
@@ -192,11 +134,7 @@ contract OrderDispatchDepositBaseTest is OrderDispatchBase {
         vm.stopPrank();
         vm.startPrank(users.gov);
         constructDepositPayload(
-            users.alice,
-            1,
-            defaults.usdcDepositQuantity(),
-            address(usdc),
-            "hackerman"
+            users.alice, 1, defaults.usdcDepositQuantity(), address(usdc), "hackerman"
         );
         vm.expectRevert(bytes4(keccak256("SignatureInvalid()")));
         orderDispatch.ingresso(transaction);
@@ -208,11 +146,7 @@ contract OrderDispatchDepositBaseTest is OrderDispatchBase {
         vm.stopPrank();
         vm.startPrank(users.gov);
         constructDepositPayload(
-            users.alice,
-            1,
-            defaults.usdcDepositQuantity(),
-            address(users.alice),
-            "alice"
+            users.alice, 1, defaults.usdcDepositQuantity(), address(users.alice), "alice"
         );
         vm.expectRevert(bytes4(keccak256("ProductInvalid()")));
         orderDispatch.ingresso(transaction);
@@ -225,32 +159,20 @@ contract OrderDispatchDepositBaseTest is OrderDispatchBase {
         vm.startPrank(users.gov);
         address subAccount = Commons.getSubAccount(users.alice, 1);
         expectCallToTransferFromToken(
-            weth,
-            users.alice,
-            address(ciao),
-            defaults.wethDepositQuantity()
+            weth, users.alice, address(ciao), defaults.wethDepositQuantity()
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             subAccount,
             address(weth),
             int256(ciao.balances(subAccount, address(weth))),
-            int256(ciao.balances(subAccount, address(weth))) +
-                int256(defaults.wethDepositQuantity())
+            int256(ciao.balances(subAccount, address(weth)))
+                + int256(defaults.wethDepositQuantity())
         );
         vm.expectEmit(address(ciao));
-        emit Events.Deposit(
-            users.alice,
-            1,
-            address(weth),
-            defaults.wethDepositQuantity()
-        );
+        emit Events.Deposit(users.alice, 1, address(weth), defaults.wethDepositQuantity());
         constructDepositPayload(
-            users.alice,
-            1,
-            defaults.wethDepositQuantity(),
-            address(weth),
-            "alice"
+            users.alice, 1, defaults.wethDepositQuantity(), address(weth), "alice"
         );
         orderDispatch.ingresso(transaction);
         assertEq(
@@ -258,10 +180,7 @@ contract OrderDispatchDepositBaseTest is OrderDispatchBase {
             Commons.convertToE18(defaults.wethDepositQuantity() * 2, 18)
         );
         assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(weth)));
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 1),
-            address(weth)
-        );
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 1), address(weth));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 2);
     }
 
@@ -272,83 +191,47 @@ contract OrderDispatchDepositBaseTest is OrderDispatchBase {
         vm.startPrank(users.gov);
         ciao.setRequiresDispatchCall(true);
         address subAccount = Commons.getSubAccount(users.alice, 0);
-        expectCallToTransferFrom(
-            users.alice,
-            address(ciao),
-            defaults.usdcDepositQuantity()
-        );
+        expectCallToTransferFrom(users.alice, address(ciao), defaults.usdcDepositQuantity());
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             subAccount,
             address(usdc),
             int256(ciao.balances(subAccount, address(usdc))),
-            int256(ciao.balances(subAccount, address(usdc))) +
-                int256(
-                    Commons.convertToE18(
-                        defaults.usdcDepositQuantity(),
-                        usdc.decimals()
-                    )
-                )
+            int256(ciao.balances(subAccount, address(usdc)))
+                + int256(Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals()))
         );
         vm.expectEmit(address(ciao));
-        emit Events.Deposit(
-            users.alice,
-            0,
-            address(usdc),
-            defaults.usdcDepositQuantity()
-        );
+        emit Events.Deposit(users.alice, 0, address(usdc), defaults.usdcDepositQuantity());
         constructDepositPayload(
-            users.alice,
-            0,
-            defaults.usdcDepositQuantity(),
-            address(usdc),
-            "alice"
+            users.alice, 0, defaults.usdcDepositQuantity(), address(usdc), "alice"
         );
         orderDispatch.ingresso(transaction);
         assertEq(
             ciao.balances(subAccount, address(usdc)),
-            Commons.convertToE18(
-                defaults.usdcDepositQuantity(),
-                usdc.decimals()
-            )
+            Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals())
         );
         assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(usdc)));
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0),
-            address(usdc)
-        );
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(usdc));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 1);
         vm.startPrank(users.alice);
         weth.approve(address(ciao), defaults.wethDepositQuantity());
         vm.stopPrank();
         vm.startPrank(users.gov);
         expectCallToTransferFromToken(
-            weth,
-            users.alice,
-            address(ciao),
-            defaults.wethDepositQuantity()
+            weth, users.alice, address(ciao), defaults.wethDepositQuantity()
         );
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             subAccount,
             address(weth),
             int256(ciao.balances(subAccount, address(weth))),
-            int256(ciao.balances(subAccount, address(weth))) +
-                int256(defaults.wethDepositQuantity())
+            int256(ciao.balances(subAccount, address(weth)))
+                + int256(defaults.wethDepositQuantity())
         );
         vm.expectEmit(address(ciao));
-        emit Events.Deposit(
-            users.alice,
-            0,
-            address(weth),
-            defaults.wethDepositQuantity()
-        );
+        emit Events.Deposit(users.alice, 0, address(weth), defaults.wethDepositQuantity());
         constructDepositPayload(
-            users.alice,
-            0,
-            defaults.wethDepositQuantity(),
-            address(weth),
-            "alice"
+            users.alice, 0, defaults.wethDepositQuantity(), address(weth), "alice"
         );
         orderDispatch.ingresso(transaction);
         assertEq(
@@ -356,10 +239,7 @@ contract OrderDispatchDepositBaseTest is OrderDispatchBase {
             Commons.convertToE18(defaults.wethDepositQuantity(), 18)
         );
         assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(weth)));
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 1),
-            address(weth)
-        );
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 1), address(weth));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 2);
     }
 
@@ -369,57 +249,33 @@ contract OrderDispatchDepositBaseTest is OrderDispatchBase {
         vm.stopPrank();
         vm.startPrank(users.gov);
         address subAccount = Commons.getSubAccount(users.alice, 0);
-        expectCallToTransferFrom(
-            users.alice,
-            address(ciao),
-            defaults.usdcDepositQuantity()
-        );
+        expectCallToTransferFrom(users.alice, address(ciao), defaults.usdcDepositQuantity());
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
             subAccount,
             address(usdc),
             int256(ciao.balances(subAccount, address(usdc))),
-            int256(ciao.balances(subAccount, address(usdc))) +
-                int256(
-                    Commons.convertToE18(
-                        defaults.usdcDepositQuantity(),
-                        usdc.decimals()
-                    )
-                )
+            int256(ciao.balances(subAccount, address(usdc)))
+                + int256(Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals()))
         );
         vm.expectEmit(address(ciao));
-        emit Events.Deposit(
-            users.alice,
-            0,
-            address(usdc),
-            defaults.usdcDepositQuantity()
-        );
+        emit Events.Deposit(users.alice, 0, address(usdc), defaults.usdcDepositQuantity());
         constructDepositPayload(
-            users.alice,
-            0,
-            defaults.usdcDepositQuantity(),
-            address(usdc),
-            "alice"
+            users.alice, 0, defaults.usdcDepositQuantity(), address(usdc), "alice"
         );
         uint32[] memory setPricesProductIds = new uint32[](1);
         setPricesProductIds[0] = defaults.wbtcProductId();
 
         uint256[] memory setPricesValues = new uint256[](1);
         setPricesValues[0] = 100000e18;
-        bytes memory payload = abi.encodePacked(
-            uint8(1),
-            setPricesProductIds[0],
-            setPricesValues[0]
-        );
+        bytes memory payload =
+            abi.encodePacked(uint8(1), setPricesProductIds[0], setPricesValues[0]);
         transaction.push(payload);
         appendApproveSignerPayload("alice", 1);
         (bytes32 takerHash, bytes32 makerHash) = appendMatchOrderPayload();
         vm.expectEmit(address(addressManifest));
         emit Events.SignerApprovalUpdated(
-            approval.account,
-            approval.subAccountId,
-            approval.approvedSigner,
-            approval.isApproved
+            approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
         );
         ensureBalanceChangeEventsSpotMatch(
             defaults.usdcDepositQuantityE18(),
@@ -434,16 +290,10 @@ contract OrderDispatchDepositBaseTest is OrderDispatchBase {
         orderDispatch.ingresso(transaction);
         assertEq(
             ciao.balances(subAccount, address(usdc)),
-            Commons.convertToE18(
-                defaults.usdcDepositQuantity(),
-                usdc.decimals()
-            )
+            Commons.convertToE18(defaults.usdcDepositQuantity(), usdc.decimals())
         );
         assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount, address(usdc)));
-        assertEq(
-            ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0),
-            address(usdc)
-        );
+        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount, 0), address(usdc));
         assertEq(ciao.subAccountAssetSetLength(subAccount), 1);
         subAccount = Commons.getSubAccount(users.alice, 1);
         assertEq(furnace.prices(defaults.wbtcProductId()), 100000e18);
@@ -463,11 +313,7 @@ contract OrderDispatchDepositBaseTest is OrderDispatchBase {
 
     function test_Fail_Bad_Payload_Shape() public {
         constructDepositPayload(
-            users.alice,
-            0,
-            defaults.usdcDepositQuantity(),
-            address(usdc),
-            "alice"
+            users.alice, 0, defaults.usdcDepositQuantity(), address(usdc), "alice"
         );
         transaction[0] = abi.encodePacked(transaction[0], uint8(0));
         vm.expectRevert(bytes4(keccak256("OrderByteLengthInvalid()")));

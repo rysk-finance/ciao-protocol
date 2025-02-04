@@ -40,9 +40,7 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             uint128(defaults.wethDepositQuantity()),
             1
         );
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
         constructForceSwapPayload(1, liquidateeDepositCount);
         vm.expectRevert(bytes4(keccak256("NoCoreCollateralDebt()")));
         orderDispatch.ingresso(transaction);
@@ -54,8 +52,7 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             address(weth)
         );
         (bcu1, bcu1, bcf) = getCoreCollatBalances(
-            Commons.getSubAccount(users.dan, 1),
-            Commons.getSubAccount(users.alice, 1)
+            Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
         );
     }
 
@@ -68,13 +65,9 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             BasicMath.min(takerOrder.quantity, makerOrder.quantity),
             makerOrder.price
         );
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
-        (bytes32 takerHash, bytes32 makerHash) = constructForceSwapPayload(
-            1,
-            liquidateeDepositCount
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
+        (bytes32 takerHash, bytes32 makerHash) =
+            constructForceSwapPayload(1, liquidateeDepositCount);
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
@@ -90,22 +83,13 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             orderDispatch.txFees(0)
         );
         assertGt(
-            int256(
-                ciao.balances(
-                    Commons.getSubAccount(users.dan, 1),
-                    address(usdc)
-                )
-            ) -
-                int256(
-                    ciao.coreCollateralDebt(Commons.getSubAccount(users.dan, 1))
-                ),
+            int256(ciao.balances(Commons.getSubAccount(users.dan, 1), address(usdc)))
+                - int256(ciao.coreCollateralDebt(Commons.getSubAccount(users.dan, 1))),
             bcu1
         );
     }
 
-    function test_Happy_Match_Order_Sig_Spot_offchain_deposit_count_greater()
-        public
-    {
+    function test_Happy_Match_Order_Sig_Spot_offchain_deposit_count_greater() public {
         ensureBalanceChangeEventsSpotMatch(
             defaults.usdcDepositQuantityE18(),
             defaults.wethDepositQuantity(),
@@ -114,13 +98,9 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             BasicMath.min(takerOrder.quantity, makerOrder.quantity),
             makerOrder.price
         );
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
-        (bytes32 takerHash, bytes32 makerHash) = constructForceSwapPayload(
-            1,
-            liquidateeDepositCount + 1
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
+        (bytes32 takerHash, bytes32 makerHash) =
+            constructForceSwapPayload(1, liquidateeDepositCount + 1);
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
@@ -136,15 +116,8 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             orderDispatch.txFees(0)
         );
         assertGt(
-            int256(
-                ciao.balances(
-                    Commons.getSubAccount(users.dan, 1),
-                    address(usdc)
-                )
-            ) -
-                int256(
-                    ciao.coreCollateralDebt(Commons.getSubAccount(users.dan, 1))
-                ),
+            int256(ciao.balances(Commons.getSubAccount(users.dan, 1), address(usdc)))
+                - int256(ciao.coreCollateralDebt(Commons.getSubAccount(users.dan, 1))),
             bcu1
         );
     }
@@ -162,13 +135,9 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             wethDeposit,
             makerOrder.price
         );
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
-        (bytes32 takerHash, bytes32 makerHash) = constructForceSwapPayload(
-            1,
-            liquidateeDepositCount
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
+        (bytes32 takerHash, bytes32 makerHash) =
+            constructForceSwapPayload(1, liquidateeDepositCount);
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
@@ -194,18 +163,12 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             wethDeposit,
             makerOrder.price
         );
-        (takerHash, makerHash) = constructForceSwapPayload(
-            1,
-            liquidateeDepositCount
-        );
+        (takerHash, makerHash) = constructForceSwapPayload(1, liquidateeDepositCount);
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
         assertEq(spotCrucible.filledQuantitys(takerHash), wethDeposit);
-        assertEq(
-            spotCrucible.filledQuantitys(makerHash),
-            defaults.wethDepositQuantity()
-        );
+        assertEq(spotCrucible.filledQuantitys(makerHash), defaults.wethDepositQuantity());
         assertSpotBalanceChange(
             (wethDeposit * makerOrder.price) / 1e18,
             wethDeposit,
@@ -216,15 +179,8 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             orderDispatch.txFees(0)
         );
         assertGt(
-            int256(
-                ciao.balances(
-                    Commons.getSubAccount(users.dan, 1),
-                    address(usdc)
-                )
-            ) -
-                int256(
-                    ciao.coreCollateralDebt(Commons.getSubAccount(users.dan, 1))
-                ),
+            int256(ciao.balances(Commons.getSubAccount(users.dan, 1), address(usdc)))
+                - int256(ciao.coreCollateralDebt(Commons.getSubAccount(users.dan, 1))),
             bcu1
         );
     }
@@ -243,13 +199,9 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             wethDeposit,
             makerOrder.price
         );
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
-        (bytes32 takerHash, bytes32 makerHash) = constructForceSwapPayload(
-            1,
-            liquidateeDepositCount
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
+        (bytes32 takerHash, bytes32 makerHash) =
+            constructForceSwapPayload(1, liquidateeDepositCount);
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
@@ -275,17 +227,11 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             wethDeposit,
             makerOrder.price
         );
-        (takerHash, makerHash) = constructForceSwapPayload(
-            1,
-            liquidateeDepositCount
-        );
+        (takerHash, makerHash) = constructForceSwapPayload(1, liquidateeDepositCount);
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
-        assertEq(
-            spotCrucible.filledQuantitys(takerHash),
-            defaults.wethDepositQuantity()
-        );
+        assertEq(spotCrucible.filledQuantitys(takerHash), defaults.wethDepositQuantity());
         assertEq(spotCrucible.filledQuantitys(makerHash), wethDeposit);
         assertSpotBalanceChange(
             (wethDeposit * makerOrder.price) / 1e18,
@@ -297,22 +243,13 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             orderDispatch.txFees(0)
         );
         assertGt(
-            int256(
-                ciao.balances(
-                    Commons.getSubAccount(users.dan, 1),
-                    address(usdc)
-                )
-            ) -
-                int256(
-                    ciao.coreCollateralDebt(Commons.getSubAccount(users.dan, 1))
-                ),
+            int256(ciao.balances(Commons.getSubAccount(users.dan, 1), address(usdc)))
+                - int256(ciao.coreCollateralDebt(Commons.getSubAccount(users.dan, 1))),
             bcu1
         );
     }
 
-    function test_Happy_Batch_Match_Order_partial_for_taker_multiple_makers()
-        public
-    {
+    function test_Happy_Batch_Match_Order_partial_for_taker_multiple_makers() public {
         makerOrder.price = 110e18;
         takerOrder.price = 100e18;
         uint256 wethDeposit = uint256(defaults.wethDepositQuantity() / 5);
@@ -325,18 +262,11 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             wethDeposit,
             makerOrder.price
         );
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
-        (bytes32 takerHash, bytes32 makerHash) = constructForceSwapPayload(
-            1,
-            liquidateeDepositCount
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
+        (bytes32 takerHash, bytes32 makerHash) =
+            constructForceSwapPayload(1, liquidateeDepositCount);
         makerOrder.nonce = 2;
-        (, bytes32 makerHash2) = appendForceSwapMakerPayload(
-            1,
-            liquidateeDepositCount
-        );
+        (, bytes32 makerHash2) = appendForceSwapMakerPayload(1, liquidateeDepositCount);
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         vm.expectEmit(address(orderDispatch));
@@ -355,22 +285,13 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             orderDispatch.txFees(0)
         );
         assertGt(
-            int256(
-                ciao.balances(
-                    Commons.getSubAccount(users.dan, 1),
-                    address(usdc)
-                )
-            ) -
-                int256(
-                    ciao.coreCollateralDebt(Commons.getSubAccount(users.dan, 1))
-                ),
+            int256(ciao.balances(Commons.getSubAccount(users.dan, 1), address(usdc)))
+                - int256(ciao.coreCollateralDebt(Commons.getSubAccount(users.dan, 1))),
             bcu1
         );
     }
 
-    function test_Happy_Batch_Match_Order_partial_for_maker_multiple_takers()
-        public
-    {
+    function test_Happy_Batch_Match_Order_partial_for_maker_multiple_takers() public {
         orderDispatch.setTxFees(0, 0);
         makerOrder.price = 110e18;
         takerOrder.price = 100e18;
@@ -384,18 +305,11 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             wethDeposit,
             makerOrder.price
         );
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
-        (bytes32 takerHash, bytes32 makerHash) = constructForceSwapPayload(
-            1,
-            liquidateeDepositCount
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
+        (bytes32 takerHash, bytes32 makerHash) =
+            constructForceSwapPayload(1, liquidateeDepositCount);
         takerOrder.nonce = 2;
-        (bytes32 takerHash2, ) = appendForceSwapPayload(
-            1,
-            liquidateeDepositCount
-        );
+        (bytes32 takerHash2,) = appendForceSwapPayload(1, liquidateeDepositCount);
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         vm.expectEmit(address(orderDispatch));
@@ -414,30 +328,19 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             orderDispatch.txFees(0)
         );
         assertGt(
-            int256(
-                ciao.balances(
-                    Commons.getSubAccount(users.dan, 1),
-                    address(usdc)
-                )
-            ) -
-                int256(
-                    ciao.coreCollateralDebt(Commons.getSubAccount(users.dan, 1))
-                ),
+            int256(ciao.balances(Commons.getSubAccount(users.dan, 1), address(usdc)))
+                - int256(ciao.coreCollateralDebt(Commons.getSubAccount(users.dan, 1))),
             bcu1
         );
     }
 
-    function test_Fail_Batch_Match_Order_partial_for_maker_multiple_takers_overdoes_debt()
-        public
-    {
+    function test_Fail_Batch_Match_Order_partial_for_maker_multiple_takers_overdoes_debt() public {
         orderDispatch.setTxFees(0, 0);
         makerOrder.price = 110e18;
         takerOrder.price = 100e18;
         uint256 wethDeposit = uint256(defaults.wethDepositQuantity() / 2);
         takerOrder.quantity = uint128(wethDeposit);
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
         constructForceSwapPayload(1, liquidateeDepositCount);
         takerOrder.nonce = 2;
         appendForceSwapPayload(1, liquidateeDepositCount);
@@ -445,17 +348,14 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         orderDispatch.ingresso(transaction);
     }
 
-    function test_Fail_Batch_Match_Order_partial_for_maker_multiple_takers_no_debt_but_recent_deposit()
-        public
-    {
+    function test_Fail_Batch_Match_Order_partial_for_maker_multiple_takers_no_debt_but_recent_deposit(
+    ) public {
         orderDispatch.setTxFees(0, 0);
         makerOrder.price = 110e18;
         takerOrder.price = 100e18;
         uint256 wethDeposit = uint256(defaults.wethDepositQuantity() / 2);
         takerOrder.quantity = uint128(wethDeposit);
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
         constructForceSwapPayload(1, liquidateeDepositCount);
         takerOrder.nonce = 2;
         appendForceSwapPayload(1, liquidateeDepositCount - 1);
@@ -476,13 +376,9 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             BasicMath.min(takerOrder.quantity, makerOrder.quantity),
             makerOrder.price
         );
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
-        (bytes32 takerHash, bytes32 makerHash) = constructForceSwapPayload(
-            1,
-            liquidateeDepositCount
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
+        (bytes32 takerHash, bytes32 makerHash) =
+            constructForceSwapPayload(1, liquidateeDepositCount);
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
@@ -499,21 +395,12 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             (wethDeposit * 3) / 4,
             makerOrder.price
         );
-        (takerHash, makerHash) = constructForceSwapPayload(
-            1,
-            liquidateeDepositCount
-        );
+        (takerHash, makerHash) = constructForceSwapPayload(1, liquidateeDepositCount);
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
-        assertEq(
-            spotCrucible.filledQuantitys(takerHash),
-            (wethDeposit * 3) / 4
-        );
-        assertEq(
-            spotCrucible.filledQuantitys(makerHash),
-            defaults.wethDepositQuantity()
-        );
+        assertEq(spotCrucible.filledQuantitys(takerHash), (wethDeposit * 3) / 4);
+        assertEq(spotCrucible.filledQuantitys(makerHash), defaults.wethDepositQuantity());
         assertSpotBalanceChange(
             (wethDeposit * makerOrder.price) / 1e18,
             wethDeposit,
@@ -524,22 +411,13 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             orderDispatch.txFees(0)
         );
         assertGt(
-            int256(
-                ciao.balances(
-                    Commons.getSubAccount(users.dan, 1),
-                    address(usdc)
-                )
-            ) -
-                int256(
-                    ciao.coreCollateralDebt(Commons.getSubAccount(users.dan, 1))
-                ),
+            int256(ciao.balances(Commons.getSubAccount(users.dan, 1), address(usdc)))
+                - int256(ciao.coreCollateralDebt(Commons.getSubAccount(users.dan, 1))),
             bcu1
         );
     }
 
-    function test_Happy_Match_Order_maker_BUY_maker_price_more_than_taker()
-        public
-    {
+    function test_Happy_Match_Order_maker_BUY_maker_price_more_than_taker() public {
         makerOrder.price = 110e18;
         takerOrder.price = 100e18;
         ensureBalanceChangeEventsSpotMatch(
@@ -550,13 +428,9 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             BasicMath.min(takerOrder.quantity, makerOrder.quantity),
             makerOrder.price
         );
-        uint64 liquidateeDepositCount = ciao.depositCount(
-            Commons.getSubAccount(users.dan, 1)
-        );
-        (bytes32 takerHash, bytes32 makerHash) = constructForceSwapPayload(
-            1,
-            liquidateeDepositCount
-        );
+        uint64 liquidateeDepositCount = ciao.depositCount(Commons.getSubAccount(users.dan, 1));
+        (bytes32 takerHash, bytes32 makerHash) =
+            constructForceSwapPayload(1, liquidateeDepositCount);
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
@@ -572,15 +446,8 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
             orderDispatch.txFees(0)
         );
         assertGt(
-            int256(
-                ciao.balances(
-                    Commons.getSubAccount(users.dan, 1),
-                    address(usdc)
-                )
-            ) -
-                int256(
-                    ciao.coreCollateralDebt(Commons.getSubAccount(users.dan, 1))
-                ),
+            int256(ciao.balances(Commons.getSubAccount(users.dan, 1), address(usdc)))
+                - int256(ciao.coreCollateralDebt(Commons.getSubAccount(users.dan, 1))),
             bcu1
         );
     }

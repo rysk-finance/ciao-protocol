@@ -14,6 +14,7 @@ import "src/contracts/libraries/MarginDirective.sol";
 /// @notice Contract for consolidation all margin checking and position adding logic
 contract MockFurnaceUnitTest is Furnace {
     constructor(address _addressManifest) Furnace(_addressManifest) {}
+
     function calculateSpreadHealth(
         uint256 spreadPenalty,
         uint256 quantity,
@@ -23,24 +24,22 @@ contract MockFurnaceUnitTest is Furnace {
         int256 initCumFunding,
         int256 currentCumFunding
     ) external pure returns (int256 health) {
-        return
-            MarginDirective._calculateSpreadHealth(
-                spreadPenalty,
-                quantity,
-                spotPrice,
-                perpPrice,
-                perpEntryPrice,
-                initCumFunding,
-                currentCumFunding
-            );
+        return MarginDirective._calculateSpreadHealth(
+            spreadPenalty,
+            quantity,
+            spotPrice,
+            perpPrice,
+            perpEntryPrice,
+            initCumFunding,
+            currentCumFunding
+        );
     }
 
-    function calculateSpotHealth(
-        uint256 weight,
-        uint256 quantity,
-        uint256 spotPrice
-    ) external pure returns (int256 health) {
-        return
-            MarginDirective._calculateSpotHealth(weight, quantity, spotPrice);
+    function calculateSpotHealth(uint256 weight, uint256 quantity, uint256 spotPrice)
+        external
+        pure
+        returns (int256 health)
+    {
+        return MarginDirective._calculateSpotHealth(weight, quantity, spotPrice);
     }
 }

@@ -56,16 +56,11 @@ contract OrderDispatchUpdateCumulativeFundingBaseTest is OrderDispatchBase {
         int256[] memory setCumulativeFundingsValues = new int256[](1);
         setCumulativeFundingsValues[0] = 100000e18;
         bytes memory payload = abi.encodePacked(
-            uint8(7),
-            setCumulativeFundingsProductIds[0],
-            setCumulativeFundingsValues[0]
+            uint8(7), setCumulativeFundingsProductIds[0], setCumulativeFundingsValues[0]
         );
         transaction.push(payload);
         orderDispatch.ingresso(transaction);
-        assertEq(
-            perpCrucible.currentCumFunding(defaults.wbtcProductId()),
-            100000e18
-        );
+        assertEq(perpCrucible.currentCumFunding(defaults.wbtcProductId()), 100000e18);
     }
 
     function test_Happy_Update_CumulativeFunding_Seperate() public {
@@ -74,28 +69,18 @@ contract OrderDispatchUpdateCumulativeFundingBaseTest is OrderDispatchBase {
         int256[] memory setCumulativeFundingsValues = new int256[](1);
         setCumulativeFundingsValues[0] = 100000e18;
         bytes memory payload = abi.encodePacked(
-            uint8(7),
-            setCumulativeFundingsProductIds[0],
-            setCumulativeFundingsValues[0]
+            uint8(7), setCumulativeFundingsProductIds[0], setCumulativeFundingsValues[0]
         );
         transaction.push(payload);
         setCumulativeFundingsProductIds[0] = defaults.wethProductId();
         setCumulativeFundingsValues[0] = 696969e18;
         payload = abi.encodePacked(
-            uint8(7),
-            setCumulativeFundingsProductIds[0],
-            setCumulativeFundingsValues[0]
+            uint8(7), setCumulativeFundingsProductIds[0], setCumulativeFundingsValues[0]
         );
         transaction.push(payload);
         orderDispatch.ingresso(transaction);
-        assertEq(
-            perpCrucible.currentCumFunding(defaults.wbtcProductId()),
-            100000e18
-        );
-        assertEq(
-            perpCrucible.currentCumFunding(defaults.wethProductId()),
-            696969e18
-        );
+        assertEq(perpCrucible.currentCumFunding(defaults.wbtcProductId()), 100000e18);
+        assertEq(perpCrucible.currentCumFunding(defaults.wethProductId()), 696969e18);
     }
 
     function test_Happy_Update_CumulativeFunding_Batch() public {
@@ -118,18 +103,9 @@ contract OrderDispatchUpdateCumulativeFundingBaseTest is OrderDispatchBase {
         );
         transaction.push(payload);
         orderDispatch.ingresso(transaction);
-        assertEq(
-            perpCrucible.currentCumFunding(defaults.wbtcProductId()),
-            100000e18
-        );
-        assertEq(
-            perpCrucible.currentCumFunding(defaults.wethProductId()),
-            696969e18
-        );
-        assertEq(
-            perpCrucible.currentCumFunding(defaults.wethUsdcPerpProductId()),
-            69e18
-        );
+        assertEq(perpCrucible.currentCumFunding(defaults.wbtcProductId()), 100000e18);
+        assertEq(perpCrucible.currentCumFunding(defaults.wethProductId()), 696969e18);
+        assertEq(perpCrucible.currentCumFunding(defaults.wethUsdcPerpProductId()), 69e18);
     }
 
     function test_Happy_Update_CumulativeFunding_Batch_Multiple() public {
@@ -168,46 +144,27 @@ contract OrderDispatchUpdateCumulativeFundingBaseTest is OrderDispatchBase {
         );
         transaction.push(payload);
         orderDispatch.ingresso(transaction);
-        assertEq(
-            perpCrucible.currentCumFunding(defaults.wbtcProductId()),
-            200002e18
-        );
-        assertEq(
-            perpCrucible.currentCumFunding(defaults.wethProductId()),
-            696969e18
-        );
-        assertEq(
-            perpCrucible.currentCumFunding(defaults.wethUsdcPerpProductId()),
-            69e18
-        );
-        assertEq(
-            perpCrucible.currentCumFunding(defaults.wbtcUsdcPerpProductId()),
-            797317e18
-        );
+        assertEq(perpCrucible.currentCumFunding(defaults.wbtcProductId()), 200002e18);
+        assertEq(perpCrucible.currentCumFunding(defaults.wethProductId()), 696969e18);
+        assertEq(perpCrucible.currentCumFunding(defaults.wethUsdcPerpProductId()), 69e18);
+        assertEq(perpCrucible.currentCumFunding(defaults.wbtcUsdcPerpProductId()), 797317e18);
     }
 
-    function test_Happy_Update_CumulativeFunding_Match_Order_Approve_Signer()
-        public
-    {
+    function test_Happy_Update_CumulativeFunding_Match_Order_Approve_Signer() public {
         uint32[] memory setCumulativeFundingsProductIds = new uint32[](1);
         setCumulativeFundingsProductIds[0] = defaults.wbtcProductId();
 
         int256[] memory setCumulativeFundingsValues = new int256[](1);
         setCumulativeFundingsValues[0] = 100000e18;
         bytes memory payload = abi.encodePacked(
-            uint8(7),
-            setCumulativeFundingsProductIds[0],
-            setCumulativeFundingsValues[0]
+            uint8(7), setCumulativeFundingsProductIds[0], setCumulativeFundingsValues[0]
         );
         transaction.push(payload);
         appendApproveSignerPayload("alice", 1);
         (bytes32 takerHash, bytes32 makerHash) = appendMatchOrderPayload();
         vm.expectEmit(address(addressManifest));
         emit Events.SignerApprovalUpdated(
-            approval.account,
-            approval.subAccountId,
-            approval.approvedSigner,
-            approval.isApproved
+            approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
         );
         ensureBalanceChangeEventsSpotMatch(
             defaults.usdcDepositQuantityE18(),
@@ -221,10 +178,7 @@ contract OrderDispatchUpdateCumulativeFundingBaseTest is OrderDispatchBase {
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
         address subAccount = Commons.getSubAccount(users.alice, 1);
-        assertEq(
-            perpCrucible.currentCumFunding(defaults.wbtcProductId()),
-            100000e18
-        );
+        assertEq(perpCrucible.currentCumFunding(defaults.wbtcProductId()), 100000e18);
         assertTrue(addressManifest.approvedSigners(subAccount, users.keeper));
         assertEq(spotCrucible.filledQuantitys(takerHash), takerOrder.quantity);
         assertEq(spotCrucible.filledQuantitys(makerHash), makerOrder.quantity);

@@ -48,34 +48,17 @@ contract FurnaceSubaccountHealthTestFuzz is Base_Test {
             wbtcUsdcPerpPrice
         );
 
-        int maintenance = furnace.getSubAccountHealth(
-            Commons.getSubAccount(users.alice, 1),
-            false
-        );
+        int256 maintenance =
+            furnace.getSubAccountHealth(Commons.getSubAccount(users.alice, 1), false);
 
-        int initial = furnace.getSubAccountHealth(
-            Commons.getSubAccount(users.alice, 1),
-            true
-        );
+        int256 initial = furnace.getSubAccountHealth(Commons.getSubAccount(users.alice, 1), true);
 
         assertEq(furnace.prices(defaults.wbtcProductId()), wbtcSpotPrice);
         assertEq(furnace.prices(defaults.wethProductId()), wethSpotPrice);
-        assertEq(
-            furnace.prices(defaults.wbtcUsdcPerpProductId()),
-            wbtcUsdcPerpPrice
-        );
-        assertEq(
-            furnace.prices(defaults.wethUsdcPerpProductId()),
-            wethUsdcPerpPrice
-        );
-        assertEq(
-            perpCrucible.currentCumFunding(defaults.wbtcUsdcPerpProductId()),
-            wbtcCumFunding
-        );
-        assertEq(
-            perpCrucible.currentCumFunding(defaults.wethUsdcPerpProductId()),
-            wethCumFunding
-        );
+        assertEq(furnace.prices(defaults.wbtcUsdcPerpProductId()), wbtcUsdcPerpPrice);
+        assertEq(furnace.prices(defaults.wethUsdcPerpProductId()), wethUsdcPerpPrice);
+        assertEq(perpCrucible.currentCumFunding(defaults.wbtcUsdcPerpProductId()), wbtcCumFunding);
+        assertEq(perpCrucible.currentCumFunding(defaults.wethUsdcPerpProductId()), wethCumFunding);
 
         assertEq(
             ciao.balances(Commons.getSubAccount(users.alice, 1), address(usdc)),
@@ -87,8 +70,7 @@ contract FurnaceSubaccountHealthTestFuzz is Base_Test {
             Commons.convertToE18(uint256(wbtcSpotQuantity), wbtc.decimals())
         );
         assertEq(
-            ciao.balances(Commons.getSubAccount(users.alice, 1), address(weth)),
-            wethSpotQuantity
+            ciao.balances(Commons.getSubAccount(users.alice, 1), address(weth)), wethSpotQuantity
         );
 
         assertGe(maintenance, initial);

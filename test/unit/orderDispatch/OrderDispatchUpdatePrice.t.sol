@@ -55,11 +55,8 @@ contract OrderDispatchUpdatePriceBaseTest is OrderDispatchBase {
 
         uint256[] memory setPricesValues = new uint256[](1);
         setPricesValues[0] = 100000e18;
-        bytes memory payload = abi.encodePacked(
-            uint8(1),
-            setPricesProductIds[0],
-            setPricesValues[0]
-        );
+        bytes memory payload =
+            abi.encodePacked(uint8(1), setPricesProductIds[0], setPricesValues[0]);
         transaction.push(payload);
         orderDispatch.ingresso(transaction);
         assertEq(furnace.prices(defaults.wbtcProductId()), 100000e18);
@@ -70,19 +67,12 @@ contract OrderDispatchUpdatePriceBaseTest is OrderDispatchBase {
         setPricesProductIds[0] = defaults.wbtcProductId();
         uint256[] memory setPricesValues = new uint256[](1);
         setPricesValues[0] = 100000e18;
-        bytes memory payload = abi.encodePacked(
-            uint8(1),
-            setPricesProductIds[0],
-            setPricesValues[0]
-        );
+        bytes memory payload =
+            abi.encodePacked(uint8(1), setPricesProductIds[0], setPricesValues[0]);
         transaction.push(payload);
         setPricesProductIds[0] = defaults.wethProductId();
         setPricesValues[0] = 696969e18;
-        payload = abi.encodePacked(
-            uint8(1),
-            setPricesProductIds[0],
-            setPricesValues[0]
-        );
+        payload = abi.encodePacked(uint8(1), setPricesProductIds[0], setPricesValues[0]);
         transaction.push(payload);
         orderDispatch.ingresso(transaction);
         assertEq(furnace.prices(defaults.wbtcProductId()), 100000e18);
@@ -158,20 +148,14 @@ contract OrderDispatchUpdatePriceBaseTest is OrderDispatchBase {
 
         uint256[] memory setPricesValues = new uint256[](1);
         setPricesValues[0] = 100000e18;
-        bytes memory payload = abi.encodePacked(
-            uint8(1),
-            setPricesProductIds[0],
-            setPricesValues[0]
-        );
+        bytes memory payload =
+            abi.encodePacked(uint8(1), setPricesProductIds[0], setPricesValues[0]);
         transaction.push(payload);
         appendApproveSignerPayload("alice", 1);
         (bytes32 takerHash, bytes32 makerHash) = appendMatchOrderPayload();
         vm.expectEmit(address(addressManifest));
         emit Events.SignerApprovalUpdated(
-            approval.account,
-            approval.subAccountId,
-            approval.approvedSigner,
-            approval.isApproved
+            approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
         );
         ensureBalanceChangeEventsSpotMatch(
             defaults.usdcDepositQuantityE18(),
@@ -214,10 +198,7 @@ contract OrderDispatchUpdatePriceBaseTest is OrderDispatchBase {
         uint256[] memory setPricesValues = new uint256[](1);
         setPricesValues[0] = 100000e18;
         bytes memory payload = abi.encodePacked(
-            uint8(1),
-            setPricesProductIds[0],
-            setPricesValues[0],
-            setPricesProductIds[0]
+            uint8(1), setPricesProductIds[0], setPricesValues[0], setPricesProductIds[0]
         );
         transaction.push(payload);
         vm.expectRevert(bytes4(keccak256("OrderByteLengthInvalid()")));
@@ -231,10 +212,7 @@ contract OrderDispatchUpdatePriceBaseTest is OrderDispatchBase {
         uint256[] memory setPricesValues = new uint256[](1);
         setPricesValues[0] = 100000e18;
         bytes memory payload = abi.encodePacked(
-            uint8(1),
-            setPricesProductIds[0],
-            setPricesValues[0],
-            setPricesValues[0]
+            uint8(1), setPricesProductIds[0], setPricesValues[0], setPricesValues[0]
         );
         transaction.push(payload);
         vm.expectRevert(bytes4(keccak256("OrderByteLengthInvalid()")));
