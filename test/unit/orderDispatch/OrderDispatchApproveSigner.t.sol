@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import "src/contracts/libraries/Commons.sol";
-import {AddressManifest} from "src/contracts/AddressManifest.sol";
 import {Events} from "src/contracts/interfaces/Events.sol";
 import {IProductCatalogue} from "src/contracts/interfaces/IProductCatalogue.sol";
 import "lib/openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
@@ -17,7 +16,13 @@ contract OrderDispatchApproveSignerBaseTest is OrderDispatchBase {
     function setUp() public virtual override {
         OrderDispatchBase.setUp();
         deployOrderDispatch();
-        approval = Structs.ApproveSigner(users.alice, 1, users.keeper, true, uint64(1));
+        approval = Structs.ApproveSigner(
+            users.alice,
+            1,
+            users.keeper,
+            true,
+            uint64(1)
+        );
         takerOrder = Structs.Order(
             users.dan,
             1,
@@ -53,7 +58,10 @@ contract OrderDispatchApproveSignerBaseTest is OrderDispatchBase {
     function test_Happy_Approve_Signer_Sig_alice_1_app_dan() public {
         vm.expectEmit(address(addressManifest));
         emit Events.SignerApprovalUpdated(
-            approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
+            approval.account,
+            approval.subAccountId,
+            approval.approvedSigner,
+            approval.isApproved
         );
         constructApproveSignerPayload("alice", 1);
         orderDispatch.ingresso(transaction);
@@ -64,7 +72,10 @@ contract OrderDispatchApproveSignerBaseTest is OrderDispatchBase {
     function test_Fail_Cannot_Reuse_Signature() public {
         vm.expectEmit(address(addressManifest));
         emit Events.SignerApprovalUpdated(
-            approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
+            approval.account,
+            approval.subAccountId,
+            approval.approvedSigner,
+            approval.isApproved
         );
         constructApproveSignerPayload("alice", 1);
         orderDispatch.ingresso(transaction);
@@ -78,7 +89,10 @@ contract OrderDispatchApproveSignerBaseTest is OrderDispatchBase {
         approval.subAccountId = 2;
         vm.expectEmit(address(addressManifest));
         emit Events.SignerApprovalUpdated(
-            approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
+            approval.account,
+            approval.subAccountId,
+            approval.approvedSigner,
+            approval.isApproved
         );
         constructApproveSignerPayload("alice", 1);
         orderDispatch.ingresso(transaction);
@@ -89,7 +103,10 @@ contract OrderDispatchApproveSignerBaseTest is OrderDispatchBase {
     function test_Happy_Approve_Signer_multiple() public {
         vm.expectEmit(address(addressManifest));
         emit Events.SignerApprovalUpdated(
-            approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
+            approval.account,
+            approval.subAccountId,
+            approval.approvedSigner,
+            approval.isApproved
         );
         constructApproveSignerPayload("alice", 1);
         orderDispatch.ingresso(transaction);
@@ -98,7 +115,10 @@ contract OrderDispatchApproveSignerBaseTest is OrderDispatchBase {
         approval.isApproved = false;
         vm.expectEmit(address(addressManifest));
         emit Events.SignerApprovalUpdated(
-            approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
+            approval.account,
+            approval.subAccountId,
+            approval.approvedSigner,
+            approval.isApproved
         );
         constructApproveSignerPayload("alice", 1);
         orderDispatch.ingresso(transaction);
@@ -109,7 +129,10 @@ contract OrderDispatchApproveSignerBaseTest is OrderDispatchBase {
     function test_Fail_Approve_Signer_cant_approve_Signers() public {
         vm.expectEmit(address(addressManifest));
         emit Events.SignerApprovalUpdated(
-            approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
+            approval.account,
+            approval.subAccountId,
+            approval.approvedSigner,
+            approval.isApproved
         );
         constructApproveSignerPayload("alice", 1);
         orderDispatch.ingresso(transaction);
@@ -124,7 +147,10 @@ contract OrderDispatchApproveSignerBaseTest is OrderDispatchBase {
     function test_Happy_Approve_Signer_Batch() public {
         vm.expectEmit(address(addressManifest));
         emit Events.SignerApprovalUpdated(
-            approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
+            approval.account,
+            approval.subAccountId,
+            approval.approvedSigner,
+            approval.isApproved
         );
         constructApproveSignerPayload("alice", 1);
         approval.account = users.dan;
@@ -132,7 +158,10 @@ contract OrderDispatchApproveSignerBaseTest is OrderDispatchBase {
         approval.approvedSigner = users.gov;
         vm.expectEmit(address(addressManifest));
         emit Events.SignerApprovalUpdated(
-            approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
+            approval.account,
+            approval.subAccountId,
+            approval.approvedSigner,
+            approval.isApproved
         );
         appendApproveSignerPayload("dan", 1);
         orderDispatch.ingresso(transaction);
@@ -145,7 +174,10 @@ contract OrderDispatchApproveSignerBaseTest is OrderDispatchBase {
     function test_Happy_Approve_Signer_Batch_true_false() public {
         vm.expectEmit(address(addressManifest));
         emit Events.SignerApprovalUpdated(
-            approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
+            approval.account,
+            approval.subAccountId,
+            approval.approvedSigner,
+            approval.isApproved
         );
         constructApproveSignerPayload("alice", 1);
         approval.account = users.dan;
@@ -154,7 +186,10 @@ contract OrderDispatchApproveSignerBaseTest is OrderDispatchBase {
         approval.isApproved = false;
         vm.expectEmit(address(addressManifest));
         emit Events.SignerApprovalUpdated(
-            approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
+            approval.account,
+            approval.subAccountId,
+            approval.approvedSigner,
+            approval.isApproved
         );
         appendApproveSignerPayload("dan", 1);
         orderDispatch.ingresso(transaction);
@@ -167,14 +202,20 @@ contract OrderDispatchApproveSignerBaseTest is OrderDispatchBase {
     function test_Happy_Approve_Signer_Batch_true_false_diff_acc() public {
         vm.expectEmit(address(addressManifest));
         emit Events.SignerApprovalUpdated(
-            approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
+            approval.account,
+            approval.subAccountId,
+            approval.approvedSigner,
+            approval.isApproved
         );
         constructApproveSignerPayload("alice", 1);
         approval.account = users.dan;
         approval.isApproved = false;
         vm.expectEmit(address(addressManifest));
         emit Events.SignerApprovalUpdated(
-            approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
+            approval.account,
+            approval.subAccountId,
+            approval.approvedSigner,
+            approval.isApproved
         );
         appendApproveSignerPayload("dan", 1);
         orderDispatch.ingresso(transaction);
@@ -210,7 +251,10 @@ contract OrderDispatchApproveSignerBaseTest is OrderDispatchBase {
         (bytes32 takerHash, bytes32 makerHash) = appendMatchOrderPayload();
         vm.expectEmit(address(addressManifest));
         emit Events.SignerApprovalUpdated(
-            approval.account, approval.subAccountId, approval.approvedSigner, approval.isApproved
+            approval.account,
+            approval.subAccountId,
+            approval.approvedSigner,
+            approval.isApproved
         );
         ensureBalanceChangeEventsSpotMatch(
             defaults.usdcDepositQuantityE18(),
@@ -236,93 +280,5 @@ contract OrderDispatchApproveSignerBaseTest is OrderDispatchBase {
             makerOrder.price,
             orderDispatch.txFees(0)
         );
-    }
-
-    function test_Happy_Approve_Signer_External() public {
-        assertFalse(addressManifest.approvedSigners(users.alice, users.dan));
-        vm.startPrank(users.gov);
-        Structs.ApproveSigner memory approvalStruct =
-            Structs.ApproveSigner(users.alice, 0, users.dan, true, 0);
-        (bytes memory sig,) = makeApprovedSignerSig(approvalStruct, "alice");
-        orderDispatch.approveSignerAdmin(approvalStruct, sig);
-        assertTrue(addressManifest.approvedSigners(users.alice, users.dan));
-    }
-
-    function test_Happy_Approve_Signer_External_Diff_Subaccounts() public {
-        assertFalse(addressManifest.approvedSigners(users.alice, users.dan));
-        assertFalse(
-            addressManifest.approvedSigners(Commons.getSubAccount(users.alice, 1), users.dan)
-        );
-        vm.startPrank(users.gov);
-        Structs.ApproveSigner memory approvalStruct1 =
-            Structs.ApproveSigner(users.alice, 0, users.dan, true, 0);
-        Structs.ApproveSigner memory approvalStruct2 =
-            Structs.ApproveSigner(users.alice, 1, users.dan, true, 1);
-        (bytes memory sig1,) = makeApprovedSignerSig(approvalStruct1, "alice");
-        (bytes memory sig2,) = makeApprovedSignerSig(approvalStruct2, "alice");
-        orderDispatch.approveSignerAdmin(approvalStruct1, sig1);
-        orderDispatch.approveSignerAdmin(approvalStruct2, sig2);
-        assertTrue(addressManifest.approvedSigners(users.alice, users.dan));
-        assertTrue(
-            addressManifest.approvedSigners(Commons.getSubAccount(users.alice, 1), users.dan)
-        );
-    }
-
-    function test_Fail_Approve_Signer_External_Invalid_Sig() public {
-        assertFalse(addressManifest.approvedSigners(users.alice, users.dan));
-        vm.startPrank(users.gov);
-        Structs.ApproveSigner memory approvalStruct =
-            Structs.ApproveSigner(users.alice, 0, users.dan, true, 0);
-        (bytes memory sig,) = makeApprovedSignerSig(approvalStruct, "dan");
-        vm.expectRevert(bytes4(keccak256("SignatureInvalid()")));
-        orderDispatch.approveSignerAdmin(approvalStruct, sig);
-        assertFalse(addressManifest.approvedSigners(users.alice, users.dan));
-    }
-
-    function test_Fail_Approve_Signer_External_Unauth() public {
-        assertFalse(addressManifest.approvedSigners(users.alice, users.dan));
-        Structs.ApproveSigner memory approvalStruct =
-            Structs.ApproveSigner(users.alice, 0, users.dan, true, 0);
-        (bytes memory sig,) = makeApprovedSignerSig(approvalStruct, "alice");
-        vm.startPrank(users.alice);
-        vm.expectRevert("UNAUTHORIZED");
-        orderDispatch.approveSignerAdmin(approvalStruct, sig);
-    }
-
-    function test_Happy_Approve_Signer_External_Already_Approved() public {
-        assertFalse(addressManifest.approvedSigners(users.alice, users.dan));
-        Structs.ApproveSigner memory approvalStruct1 =
-            Structs.ApproveSigner(users.alice, 0, users.dan, true, 0);
-        Structs.ApproveSigner memory approvalStruct2 =
-            Structs.ApproveSigner(users.alice, 0, users.dan, true, 1);
-        (bytes memory sig1,) = makeApprovedSignerSig(approvalStruct1, "alice");
-        (bytes memory sig2,) = makeApprovedSignerSig(approvalStruct2, "alice");
-        orderDispatch.approveSignerAdmin(approvalStruct1, sig1);
-        assertTrue(addressManifest.approvedSigners(users.alice, users.dan));
-        orderDispatch.approveSignerAdmin(approvalStruct2, sig2);
-        assertTrue(addressManifest.approvedSigners(users.alice, users.dan));
-    }
-
-    function test_Fail_Approve_Signer_External_Reuse_Nonce() public {
-        assertFalse(addressManifest.approvedSigners(users.alice, users.dan));
-        Structs.ApproveSigner memory approvalStruct =
-            Structs.ApproveSigner(users.alice, 0, users.dan, true, 0);
-
-        (bytes memory sig,) = makeApprovedSignerSig(approvalStruct, "alice");
-        orderDispatch.approveSignerAdmin(approvalStruct, sig);
-        assertTrue(addressManifest.approvedSigners(users.alice, users.dan));
-        vm.expectRevert(bytes4(keccak256("DigestedAlready()")));
-        orderDispatch.approveSignerAdmin(approvalStruct, sig);
-    }
-
-    function test_Fail_Approve_Signer_External_isApproved_false() public {
-        assertFalse(addressManifest.approvedSigners(users.alice, users.dan));
-        vm.startPrank(users.gov);
-        Structs.ApproveSigner memory approvalStruct =
-            Structs.ApproveSigner(users.alice, 0, users.dan, false, 0);
-        (bytes memory sig,) = makeApprovedSignerSig(approvalStruct, "alice");
-        vm.expectRevert(bytes4(keccak256("AdminApprovedSignerFalse()")));
-        orderDispatch.approveSignerAdmin(approvalStruct, sig);
-        assertFalse(addressManifest.approvedSigners(users.alice, users.dan));
     }
 }

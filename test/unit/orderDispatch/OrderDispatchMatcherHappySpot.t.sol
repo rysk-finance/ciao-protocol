@@ -146,7 +146,10 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
         assertEq(spotCrucible.filledQuantitys(takerHash), wethDeposit);
-        assertEq(spotCrucible.filledQuantitys(makerHash), defaults.wethDepositQuantity());
+        assertEq(
+            spotCrucible.filledQuantitys(makerHash),
+            defaults.wethDepositQuantity()
+        );
         assertSpotBalanceChange(
             (wethDeposit * makerOrder.price) / 1e18,
             wethDeposit,
@@ -202,7 +205,10 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
-        assertEq(spotCrucible.filledQuantitys(takerHash), defaults.wethDepositQuantity());
+        assertEq(
+            spotCrucible.filledQuantitys(takerHash),
+            defaults.wethDepositQuantity()
+        );
         assertEq(spotCrucible.filledQuantitys(makerHash), wethDeposit);
         assertSpotBalanceChange(
             (wethDeposit * makerOrder.price) / 1e18,
@@ -215,7 +221,9 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         );
     }
 
-    function test_Happy_Batch_Match_Order_partial_for_taker_multiple_makers() public {
+    function test_Happy_Batch_Match_Order_partial_for_taker_multiple_makers()
+        public
+    {
         makerOrder.price = 100e18;
         takerOrder.price = 110e18;
         uint256 wethDeposit = uint256(defaults.wethDepositQuantity() / 5);
@@ -230,7 +238,7 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         );
         (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
         makerOrder.nonce = 2;
-        (,, bytes32 makerHash2) = appendMakerOrderPayload();
+        (, , bytes32 makerHash2) = appendMakerOrderPayload();
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         vm.expectEmit(address(orderDispatch));
@@ -250,7 +258,9 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         );
     }
 
-    function test_Happy_Batch_Match_Order_partial_for_maker_multiple_takers() public {
+    function test_Happy_Batch_Match_Order_partial_for_maker_multiple_takers()
+        public
+    {
         orderDispatch.setTxFees(0, 0);
         makerOrder.price = 100e18;
         takerOrder.price = 110e18;
@@ -266,7 +276,7 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         );
         (bytes32 takerHash, bytes32 makerHash) = constructMatchOrderPayload();
         takerOrder.nonce = 2;
-        (bytes32 takerHash2,) = appendMatchOrderPayload();
+        (bytes32 takerHash2, ) = appendMatchOrderPayload();
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         vm.expectEmit(address(orderDispatch));
@@ -321,8 +331,14 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         vm.expectEmit(address(orderDispatch));
         emit Events.OrderMatched(takerHash, makerHash);
         orderDispatch.ingresso(transaction);
-        assertEq(spotCrucible.filledQuantitys(takerHash), (wethDeposit * 3) / 4);
-        assertEq(spotCrucible.filledQuantitys(makerHash), defaults.wethDepositQuantity());
+        assertEq(
+            spotCrucible.filledQuantitys(takerHash),
+            (wethDeposit * 3) / 4
+        );
+        assertEq(
+            spotCrucible.filledQuantitys(makerHash),
+            defaults.wethDepositQuantity()
+        );
         assertSpotBalanceChange(
             (wethDeposit * makerOrder.price) / 1e18,
             wethDeposit,
@@ -334,7 +350,9 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         );
     }
 
-    function test_Happy_Match_Order_maker_BUY_maker_price_more_than_taker() public {
+    function test_Happy_Match_Order_maker_BUY_maker_price_more_than_taker()
+        public
+    {
         makerOrder.isBuy = true;
         takerOrder.isBuy = false;
         makerOrder.price = 110e18;
@@ -364,7 +382,9 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         );
     }
 
-    function test_Happy_Match_Order_taker_BUY_taker_price_more_than_maker() public {
+    function test_Happy_Match_Order_taker_BUY_taker_price_more_than_maker()
+        public
+    {
         makerOrder.price = 100e18;
         takerOrder.price = 110e18;
         ensureBalanceChangeEventsSpotMatch(

@@ -8,12 +8,11 @@ import "lib/openzeppelin-contracts-upgradeable/contracts/utils/ReentrancyGuardUp
 import "./interfaces/Events.sol";
 import "./interfaces/Errors.sol";
 import "./interfaces/Structs.sol";
-import "./interfaces/IAddressManifest.sol";
 
 import "./libraries/Commons.sol";
+import "./libraries/AccessControl.sol";
 import "./libraries/BasicMath.sol";
 import "./libraries/EnumerableSet.sol";
-import "./libraries/AccessControl.sol";
 
 //    _______
 //   / ____(_)___ _____
@@ -26,40 +25,37 @@ import "./libraries/AccessControl.sol";
 ///         Accounts will send collateral to this contract to satisfy
 ///         margin requirements of their existing positions.
 ///         Mk 0.0.0
-
 contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     // Governance State
     //////////////////////////////////////
 
-    /// @notice base collateral address
+    // base collateral address
     address public coreCollateralAddress;
-    /// @notice fee recipient for receiving all fees, can withdraw like any other user to harvest fees
+    // fee recipient for receiving all fees, can withdraw like any other user to harvest fees
     address public feeRecipient;
-    /// @notice address for receiving all insurance contributions
+    // address for receiving all insurance contributions
     address public insurance;
-    /// @notice boolean for defining whether a public user can call the deposit or request withdrawal function directly
-    ///         or if the call must go through the orderdispatch/off-chain system
+    // boolean for defining whether a public user can call the deposit or request withdrawal function directly
+    // or if the call must go through the orderdispatch/off-chain system
     bool public requiresDispatchCall;
 
     // Dynamic State
     //////////////////////////////////////
 
-    /// @notice Enumerable set for a subAccount
+    // Enumerable set for a subaccount
     mapping(address => EnumerableSet.AddressSet) private subAccountAssets;
-    /// @notice balances of collateral assets per subAccount subAccount=>asset=>quantity
+    // balances of collateral assets per sub account subAccount=>asset=>quantity
     mapping(address => mapping(address => uint256)) public balances;
-    /// @notice negative balance of base collateral asset per subAccount
+    // negative balance of base collateral asset per sub account
     mapping(address => uint256) public coreCollateralDebt;
-    /// @notice min deposit amount for a spot asset
+    // min deposit amount for a spot asset
     mapping(address => uint256) public minDepositAmount;
-    /// @notice mapping of subAccount to asset to WithdrawalReceipt
+    // mapping of subAccount to asset to WithdrawalReceipt
     mapping(address => mapping(address => Structs.WithdrawalReceipt)) public withdrawalReceipts;
-    /// @notice mapping of subAccount to number of deposits made
+    // mapping of subAccount to number of deposits made
     mapping(address => uint64) public depositCount;
-    /// @notice withdrawal fee for each spot asset. Denoted in asset decimals
-    mapping(address => uint256) public withdrawalFees;
 
     function initialize(
         address _addressManifest,
@@ -106,16 +102,10 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
         emit Events.MinDepositAmountChanged(_asset, _minDepositAmount);
     }
 
-    function setWithdrawalFee(address _asset, uint256 _fee) external {
-        _isAdmin();
-        withdrawalFees[_asset] = _fee;
-        emit Events.WithdrawalFeeChanged(_asset, _fee);
-    }
-
     /// @notice Update balances of a account
     /// @dev Must be called by the OrderDispatch or Liquidation
-    /// @param takerSubAccount the subAccount of the account that took liquidity from the book
-    /// @param makerSubAccount the subAccount of the account that the taker matched with
+    /// @param takerSubAccount the sub account of the account that took liquidity from the book
+    /// @param makerSubAccount the sub account of the account that the taker matched with
     /// @param baseQuantity quantity of the quote asset to change
     /// @param quoteQuantity quantity of the base asset to change
     /// @param productId uint32 id of the product being traded
@@ -139,19 +129,11 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
         // get the baseAsset and quoteAsset
         Structs.Product memory product = _productCatalogue().products(productId);
         if (isTakerBuy) {
-            _updateBalance(
-                takerSubAccount, makerSubAccount, product.baseAsset, baseQuantity, takerFee
-            );
-            _updateBalance(
-                makerSubAccount, takerSubAccount, product.quoteAsset, quoteQuantity, makerFee
-            );
+            _updateBalance(takerSubAccount, makerSubAccount, product.baseAsset, baseQuantity, takerFee);
+            _updateBalance(makerSubAccount, takerSubAccount, product.quoteAsset, quoteQuantity, makerFee);
         } else {
-            _updateBalance(
-                makerSubAccount, takerSubAccount, product.baseAsset, baseQuantity, makerFee
-            );
-            _updateBalance(
-                takerSubAccount, makerSubAccount, product.quoteAsset, quoteQuantity, takerFee
-            );
+            _updateBalance(makerSubAccount, takerSubAccount, product.baseAsset, baseQuantity, makerFee);
+            _updateBalance(takerSubAccount, makerSubAccount, product.quoteAsset, quoteQuantity, takerFee);
         }
         if (sequencerFee > 0) {
             _settleCoreCollateral(takerSubAccount, -int256(sequencerFee));
@@ -160,14 +142,11 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
     }
 
     /// @notice Settles the pnl of any derivative positions in the base collateral asset
-    /// Allows for negative balance, so long as the subAccount has sufficient margin health in other assets
+    /// Allows for negative balance, so long as the sub account has sufficient margin health in other assets
     /// @dev Must be called by the OrderDispatch or Liquidation
-    /// @param subAccount the subAccount of the account to update
+    /// @param subAccount the sub account of the account to update
     /// @param coreCollateralQuantity the value to add or subtract to the subAccount's balance
-    function settleCoreCollateral(address subAccount, int256 coreCollateralQuantity)
-        external
-        nonReentrant
-    {
+    function settleCoreCollateral(address subAccount, int256 coreCollateralQuantity) external nonReentrant {
         // check that the caller is the order dispatch or liquidation
         _isBalanceUpdater();
         subAccountAssets[subAccount].add(coreCollateralAddress);
@@ -191,57 +170,16 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
         }
     }
 
-    /// @notice allows owner to deposit spot assets on behalf of a subAccount
-    /// @dev Accessable by Owner
-    /// @param account subAccount to change
-    /// @param subAccountId the subAccount to deposit to
-    /// @param quantity the amount to increase the balance by
-    /// @param asset the spot asset balance to increase
-    function donate(address account, uint8 subAccountId, uint256 quantity, address asset)
-        external
-    {
-        _isOwner();
-        if (quantity == 0) {
-            revert Errors.DepositQuantityInvalid();
-        }
-        if (_productCatalogue().baseAssetQuoteAssetSpotIds(asset, coreCollateralAddress) == 0) {
-            revert Errors.ProductInvalid();
-        }
-
-        address subAccount = Commons.getSubAccount(account, subAccountId);
-        // Add the address to the subAccount's EnumerableSet
-        subAccountAssets[subAccount].add(asset);
-        // Store the balance update, we need to first check for any coreCollateralDebt
-        uint256 quantityE18 = Commons.convertToE18(quantity, ERC20(asset).decimals());
-        // if the asset is base collateral then handle with usdc debt, otherwise handle normally
-        if (coreCollateralAddress == asset) {
-            _settleCoreCollateral(subAccount, int256(quantityE18));
-        } else {
-            _changeBalance(subAccount, asset, int256(quantityE18));
-        }
-        // Pull resources from owner to this contract
-        SafeTransferLib.safeTransferFrom(
-            ERC20(asset), addressManifest.owner(), address(this), quantity
-        );
-        depositCount[subAccount]++;
-
-        // emit event that mocks the user depositing the asset themself
-        emit Events.Deposit(account, subAccountId, asset, quantity);
-    }
-
     // External - Public
     //////////////////////////////////////
 
-    /// @notice Deposit new assets into margin account represented as a subAccount
+    /// @notice Deposit new assets into margin account represented as a subaccount
     /// @dev Requires approval from `msg.sender`
     /// @param account the account to take funds from for the deposit
-    /// @param subAccountId the subAccount to be used for the deposit
+    /// @param subAccountId the sub account to be used for the deposit
     /// @param quantity quantity of the asset to deposit
     /// @param asset address representing the product being deposited
-    function deposit(address account, uint8 subAccountId, uint256 quantity, address asset)
-        external
-        nonReentrant
-    {
+    function deposit(address account, uint8 subAccountId, uint256 quantity, address asset) external nonReentrant {
         if (requiresDispatchCall) {
             if (msg.sender != _orderDispatch()) revert Errors.SenderInvalid();
         } else {
@@ -256,7 +194,7 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
             revert Errors.ProductInvalid();
         }
         address subAccount = Commons.getSubAccount(account, subAccountId);
-        // Add the address to the subAccount's EnumerableSet
+        // Add the address to the sub account's EnumerableSet
         subAccountAssets[subAccount].add(asset);
         // Store the balance update, we need to first check for any coreCollateralDebt
         uint256 quantityE18 = Commons.convertToE18(quantity, ERC20(asset).decimals());
@@ -273,41 +211,37 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
         emit Events.Deposit(account, subAccountId, asset, quantity);
     }
 
-    /// @notice Request to withdraw assets from the margin account represented as a subAccount
+    /// @notice Request to withdraw assets from the margin account represented as a subaccount
     ///         This records a request for withdrawal, based on this request the ciao engine will
     ///         process the request to withdraw if it is safe to do so.
-    /// @param subAccountId the subAccount to be used for the withdraw
-    /// @param quantity quantity of the asset to withdraw. Denoted in `asset` decimals
+    /// @param subAccountId the sub account to be used for the withdraw
+    /// @param quantity quantity of the asset to withdraw
     /// @param asset address representing the asset to be traded
-    function requestWithdrawal(uint8 subAccountId, uint256 quantity, address asset)
-        external
-        nonReentrant
-    {
+    function requestWithdrawal(uint8 subAccountId, uint256 quantity, address asset) external nonReentrant {
         if (requiresDispatchCall) {
             revert Errors.SenderInvalid();
         }
         // check their balance against the quantity being requested for withdrawal
         address subAccount = Commons.getSubAccount(msg.sender, subAccountId);
         uint256 quantityE18 = Commons.convertToE18(quantity, ERC20(asset).decimals());
-        if (quantity <= withdrawalFees[asset] || quantityE18 > balances[subAccount][asset]) {
+        if (quantityE18 == 0 || quantityE18 > balances[subAccount][asset]) {
             revert Errors.WithdrawQuantityInvalid();
         }
         // record the withdrawal receipt
-        withdrawalReceipts[subAccount][asset] =
-            Structs.WithdrawalReceipt(quantityE18, block.timestamp);
+        withdrawalReceipts[subAccount][asset] = Structs.WithdrawalReceipt(quantityE18, block.timestamp);
         // emit an event to show the withdrawal was requested
         emit Events.RequestWithdrawal(msg.sender, subAccountId, asset, quantity);
     }
 
-    /// @notice Withdraw assets from margin account represented as a subAccount.
+    /// @notice Withdraw assets from margin account represented as a subaccount.
     ///         This executes a balance transfer between the protocols and the withdrawer,
     ///         this will happen in one of three scenarios.
     ///         1. The user submitted a request for withdrawal and the off-chain engine processed it
     ///         2. The user submits a withdrawal to the off-chain system directly and the off-chain engine
     ///            processes it
     /// @param account the account to send the withdrawal to
-    /// @param subAccountId the subAccount to be used for the withdraw
-    /// @param quantity quantity of the asset to withdraw. Denoted in `asset` decimals
+    /// @param subAccountId the sub account to be used for the withdraw
+    /// @param quantity quantity of the asset to withdraw in asset decimals
     /// @param asset address representing the asset to be traded
     function executeWithdrawal(address account, uint8 subAccountId, uint256 quantity, address asset)
         external
@@ -316,7 +250,7 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
         address subAccount = Commons.getSubAccount(account, subAccountId);
         uint256 quantityE18 = Commons.convertToE18(quantity, ERC20(asset).decimals());
         if (msg.sender != _orderDispatch()) revert Errors.SenderInvalid();
-        if (quantity <= withdrawalFees[asset] || quantityE18 > balances[subAccount][asset]) {
+        if (quantityE18 == 0 || quantityE18 > balances[subAccount][asset]) {
             revert Errors.WithdrawQuantityInvalid();
         }
         // if the caller is the orderDispatch then execute the withdrawal normally
@@ -327,19 +261,11 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
     // Basic Getters
     //////////////////////////////////////
 
-    function isAssetInSubAccountAssetSet(address subAccount, address _a)
-        external
-        view
-        returns (bool)
-    {
+    function isAssetInSubAccountAssetSet(address subAccount, address _a) external view returns (bool) {
         return subAccountAssets[subAccount].contains(_a);
     }
 
-    function assetAtIndexInSubAccountAssetSet(address subAccount, uint256 _i)
-        external
-        view
-        returns (address)
-    {
+    function assetAtIndexInSubAccountAssetSet(address subAccount, uint256 _i) external view returns (address) {
         return subAccountAssets[subAccount].at(_i);
     }
 
@@ -354,9 +280,7 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
     // Internals
     //////////////////////////////////////
 
-    function _withdraw(address account, address subAccount, uint256 quantity, address asset)
-        internal
-    {
+    function _withdraw(address account, address subAccount, uint256 quantity, address asset) internal {
         // The account has the full quantity withdrawn from balance
         _changeBalance(subAccount, asset, -int256(quantity));
         // if the balance becomes zero then remove the asset from the set
@@ -366,16 +290,11 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
         uint256 quantityRealDecimals = Commons.convertFromE18(quantity, ERC20(asset).decimals());
         // clear the withdrawal receipt
         delete withdrawalReceipts[subAccount][asset];
-        uint256 fee = withdrawalFees[asset];
-        // increment fee recipient balance by withdrawal fee
-        _changeBalance(
-            feeRecipient, asset, int256(Commons.convertToE18(fee, ERC20(asset).decimals()))
-        );
-        // Transfer asset to sender minus withdrawal fee
-        SafeTransferLib.safeTransfer(ERC20(asset), account, quantityRealDecimals - fee);
+        // Transfer asset to sender
+        SafeTransferLib.safeTransfer(ERC20(asset), account, quantityRealDecimals);
     }
 
-    /// @dev this function should be used for any non-core collateral assets
+    /// @dev this function should be used for any none core collateral assets
     function _changeBalance(address subAccount, address asset, int256 change) internal {
         int256 balanceBefore = int256(balances[subAccount][asset]);
         if (change > 0) {
@@ -383,9 +302,7 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
         } else {
             balances[subAccount][asset] -= uint256(-change);
         }
-        emit Events.BalanceChanged(
-            subAccount, asset, balanceBefore, int256(balances[subAccount][asset])
-        );
+        emit Events.BalanceChanged(subAccount, asset, balanceBefore, int256(balances[subAccount][asset]));
     }
 
     function _updateBalance(
@@ -395,7 +312,7 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
         uint256 quantity,
         uint256 incAccountFee
     ) internal {
-        // Add the address to the subAccount's EnumerableSet
+        // Add the address to the sub account's EnumerableSet
         subAccountAssets[incAccount].add(asset);
         // if the asset is base collateral then handle for usdc debt, otherwise handle normally
         // only handle for the incremental account as we dont want this function to allow for the
@@ -422,8 +339,8 @@ contract Ciao is ReentrancyGuardUpgradeable, AccessControl {
     }
 
     function _settleCoreCollateral(address subAccount, int256 coreCollateralQuantity) internal {
-        int256 balanceBefore = int256(balances[subAccount][coreCollateralAddress])
-            - int256(coreCollateralDebt[subAccount]);
+        int256 balanceBefore =
+            int256(balances[subAccount][coreCollateralAddress]) - int256(coreCollateralDebt[subAccount]);
         if (coreCollateralQuantity >= 0) {
             uint256 absoluteBCA = uint256(coreCollateralQuantity);
             uint256 existingDebt = coreCollateralDebt[subAccount];

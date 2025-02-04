@@ -109,7 +109,9 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         orderDispatch.ingresso(transaction);
     }
 
-    function test_Fail_Match_Order_maker_BUY_maker_price_less_than_spot() public {
+    function test_Fail_Match_Order_maker_BUY_maker_price_less_than_spot()
+        public
+    {
         makerOrder.isBuy = true;
         takerOrder.isBuy = false;
         makerOrder.price = 1e18;
@@ -119,7 +121,9 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         orderDispatch.ingresso(transaction);
     }
 
-    function test_Fail_Match_Order_taker_BUY_maker_price_more_than_spot() public {
+    function test_Fail_Match_Order_taker_BUY_maker_price_more_than_spot()
+        public
+    {
         makerOrder.isBuy = false;
         takerOrder.isBuy = true;
         makerOrder.price = 1.1e18;
@@ -131,7 +135,16 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
 
     function test_Fail_Match_Order_Product_Id_Bad_Type() public {
         productCatalogue.setProduct(
-            10, Structs.Product(5, address(weth), address(usdc), true, 5e16, 3e16, false)
+            10,
+            Structs.Product(
+                5,
+                address(weth),
+                address(usdc),
+                true,
+                5e16,
+                3e16,
+                false
+            )
         );
         takerOrder.productId = 10;
         makerOrder.productId = 10;
@@ -158,8 +171,8 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
     }
 
     function test_Fail_Match_Order_Sig_Bad_Taker() public {
-        (bytes memory takerSig,) = makeOrderSig(takerOrder, "alice");
-        (bytes memory makerSig,) = makeOrderSig(makerOrder, "alice");
+        (bytes memory takerSig, ) = makeOrderSig(takerOrder, "alice");
+        (bytes memory makerSig, ) = makeOrderSig(makerOrder, "alice");
         makerOrderArrBytes.push(
             abi.encodePacked(
                 makerOrder.account,
@@ -191,7 +204,10 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         makerSigs.push(makerSig);
         transaction.push(
             abi.encodePacked(
-                uint8(0), abi.encode(Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes))
+                uint8(0),
+                abi.encode(
+                    Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes)
+                )
             )
         );
         vm.expectRevert(bytes4(keccak256("SignatureInvalid()")));
@@ -199,8 +215,8 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
     }
 
     function test_Fail_Match_Order_Sig_Bad_Maker() public {
-        (bytes memory takerSig,) = makeOrderSig(takerOrder, "dan");
-        (bytes memory makerSig,) = makeOrderSig(makerOrder, "dan");
+        (bytes memory takerSig, ) = makeOrderSig(takerOrder, "dan");
+        (bytes memory makerSig, ) = makeOrderSig(makerOrder, "dan");
         makerOrderArrBytes.push(
             abi.encodePacked(
                 makerOrder.account,
@@ -232,7 +248,10 @@ contract OrderDispatchMatcherBaseTest is OrderDispatchBase {
         makerSigs.push(makerSig);
         transaction.push(
             abi.encodePacked(
-                uint8(0), abi.encode(Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes))
+                uint8(0),
+                abi.encode(
+                    Structs.MatchedOrder(takerOrderBytes, makerOrderArrBytes)
+                )
             )
         );
         vm.expectRevert(bytes4(keccak256("SignatureInvalid()")));

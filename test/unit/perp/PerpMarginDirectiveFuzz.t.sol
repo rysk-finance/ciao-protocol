@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
-
 import "src/contracts/libraries/Commons.sol";
 
 import {MarginDirective} from "src/contracts/libraries/MarginDirective.sol";
@@ -70,6 +69,13 @@ contract MarginDirectiveFuzzTest is Base_Test {
         int40 initCumFunding,
         int40 currentCumFunding
     ) public view {
-        getPerpPayoff(quantity, avgEntryPrice, isLong, markPrice, initCumFunding, currentCumFunding);
+        getPerpPayoff(
+            quantity,
+            avgEntryPrice,
+            isLong,
+            markPrice,
+            initCumFunding,
+            currentCumFunding
+        );
     }
 }

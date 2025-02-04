@@ -87,7 +87,6 @@ library Structs {
         bool takerIsBuy;
         uint128 executionPrice;
         bool isFirstTime;
-        bool isAdl;
     }
 
     // Furnace Structs
@@ -163,7 +162,6 @@ library Structs {
         uint256 spotPrice;
         ProductRiskWeights spotRiskWeights;
     }
-
     struct PerpPosition {
         uint256 perpPositionId;
         PositionState perpPosition;
@@ -171,7 +169,6 @@ library Structs {
         int256 currentCumFunding;
         ProductRiskWeights perpRiskWeights;
     }
-
     struct SpreadPosition {
         uint256 spotPrice;
         uint256 perpPrice;

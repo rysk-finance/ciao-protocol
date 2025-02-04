@@ -5,8 +5,9 @@ import "./Structs.sol";
 
 /// @notice Interface for liquidation
 interface ILiquidation {
-    function liquidateSubAccount(Structs.LiquidateSubAccount calldata txn, bool noRecentDeposit)
-        external;
 
-    function liquidationHealthBuffer() external returns (uint256);
+    function liquidateSubAccount(
+        Structs.LiquidateSubAccount calldata txn,
+        bool noRecentDeposit
+    ) external;
 }

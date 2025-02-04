@@ -23,11 +23,16 @@ contract MockFurnace {
         uint64 maintenanceShortWeight;
     }
 
-    function setHasActivePosition(address subAccount, bool _hasActivePosition) external {
+    function setHasActivePosition(
+        address subAccount,
+        bool _hasActivePosition
+    ) external {
         hasActivePosition[subAccount] = _hasActivePosition;
     }
 
-    function doesSubAccountHaveActivePositions(address subAccount) external view returns (bool) {
+    function doesSubAccountHaveActivePositions(
+        address subAccount
+    ) external view returns (bool) {
         return hasActivePosition[subAccount];
     }
 

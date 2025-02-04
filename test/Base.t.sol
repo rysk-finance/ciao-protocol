@@ -136,40 +136,30 @@ abstract contract Base_Test is Events, Types, Test {
         ciaoProxy = new TransparentUpgradeableProxy(
             address(ciaoImpl),
             users.gov,
-            abi.encodeCall(
-                Ciao.initialize,
-                (address(addressManifest), address(usdc), users.operator, users.insurance)
-            )
+            abi.encodeCall(Ciao.initialize, (address(addressManifest), address(usdc), users.operator, users.insurance))
         );
-        ciaoProxyAdmin = ProxyAdmin(
-            address(uint160(uint256(vm.load(address(ciaoProxy), ERC1967Utils.ADMIN_SLOT))))
-        );
+        ciaoProxyAdmin = ProxyAdmin(address(uint160(uint256(vm.load(address(ciaoProxy), ERC1967Utils.ADMIN_SLOT)))));
         ciao = Ciao(address(ciaoProxy));
+        ciao.setRequiresDispatchCall(false);
     }
 
     function deploySpotCrucibleProxy() internal {
         spotCrucibleImpl = new SpotCrucible();
         spotCrucibleProxy = new TransparentUpgradeableProxy(
-            address(spotCrucibleImpl),
-            users.gov,
-            abi.encodeCall(SpotCrucible.initialize, address(addressManifest))
+            address(spotCrucibleImpl), users.gov, abi.encodeCall(SpotCrucible.initialize, address(addressManifest))
         );
-        spotCrucibleProxyAdmin = ProxyAdmin(
-            address(uint160(uint256(vm.load(address(spotCrucibleProxy), ERC1967Utils.ADMIN_SLOT))))
-        );
+        spotCrucibleProxyAdmin =
+            ProxyAdmin(address(uint160(uint256(vm.load(address(spotCrucibleProxy), ERC1967Utils.ADMIN_SLOT)))));
         spotCrucible = SpotCrucible(address(spotCrucibleProxy));
     }
 
     function deployPerpCrucibleProxy() internal {
         perpCrucibleImpl = new PerpCrucible();
         perpCrucibleProxy = new TransparentUpgradeableProxy(
-            address(perpCrucibleImpl),
-            users.gov,
-            abi.encodeCall(PerpCrucible.initialize, (address(addressManifest)))
+            address(perpCrucibleImpl), users.gov, abi.encodeCall(PerpCrucible.initialize, address(addressManifest))
         );
-        perpCrucibleProxyAdmin = ProxyAdmin(
-            address(uint160(uint256(vm.load(address(perpCrucibleProxy), ERC1967Utils.ADMIN_SLOT))))
-        );
+        perpCrucibleProxyAdmin =
+            ProxyAdmin(address(uint160(uint256(vm.load(address(perpCrucibleProxy), ERC1967Utils.ADMIN_SLOT)))));
         perpCrucible = PerpCrucible(address(perpCrucibleProxy));
     }
 
@@ -185,12 +175,9 @@ abstract contract Base_Test is Events, Types, Test {
         orderDispatchImpl = new OrderDispatch();
         orderDispatchImpl.initialize(address(addressManifest));
         proxy = new TransparentUpgradeableProxy(
-            address(orderDispatchImpl),
-            users.gov,
-            abi.encodeCall(OrderDispatch.initialize, (address(addressManifest)))
+            address(orderDispatchImpl), users.gov, abi.encodeCall(OrderDispatch.initialize, address(addressManifest))
         );
-        proxyAdmin =
-            ProxyAdmin(address(uint160(uint256(vm.load(address(proxy), ERC1967Utils.ADMIN_SLOT)))));
+        proxyAdmin = ProxyAdmin(address(uint160(uint256(vm.load(address(proxy), ERC1967Utils.ADMIN_SLOT)))));
 
         orderDispatch = OrderDispatch(address(proxy));
         deploySpotCrucibleProxy();
@@ -229,28 +216,19 @@ abstract contract Base_Test is Events, Types, Test {
         vm.startPrank({msgSender: users.gov});
         // set funding snapshots
         bytes memory payload = abi.encodePacked(
-            defaults.wbtcUsdcPerpProductId(),
-            wbtcCumFunding,
-            defaults.wethUsdcPerpProductId(),
-            wethCumFunding
+            defaults.wbtcUsdcPerpProductId(), wbtcCumFunding, defaults.wethUsdcPerpProductId(), wethCumFunding
         );
         perpCrucible.updateCumulativeFundings(payload);
 
         // set positions
         if (ethPerpPos.quantity > 0) {
             perpCrucible.updatePosition(
-                address(0),
-                Commons.getSubAccount(users.alice, 1),
-                defaults.wethUsdcPerpProductId(),
-                ethPerpPos
+                address(0), Commons.getSubAccount(users.alice, 1), defaults.wethUsdcPerpProductId(), ethPerpPos
             );
         }
         if (btcPerpPos.quantity > 0) {
             perpCrucible.updatePosition(
-                address(0),
-                Commons.getSubAccount(users.alice, 1),
-                defaults.wbtcUsdcPerpProductId(),
-                btcPerpPos
+                address(0), Commons.getSubAccount(users.alice, 1), defaults.wbtcUsdcPerpProductId(), btcPerpPos
             );
         }
         vm.stopPrank();
@@ -319,28 +297,19 @@ abstract contract Base_Test is Events, Types, Test {
         // set funding snapshots
         perpCrucible.updateCumulativeFundings(
             abi.encodePacked(
-                defaults.wbtcUsdcPerpProductId(),
-                wbtcCumFunding,
-                defaults.wethUsdcPerpProductId(),
-                wethCumFunding
+                defaults.wbtcUsdcPerpProductId(), wbtcCumFunding, defaults.wethUsdcPerpProductId(), wethCumFunding
             )
         );
 
         // set positions
         if (ethPerpPos.quantity > 0) {
             perpCrucible.updatePosition(
-                address(0),
-                Commons.getSubAccount(_user, 1),
-                defaults.wethUsdcPerpProductId(),
-                ethPerpPos
+                address(0), Commons.getSubAccount(_user, 1), defaults.wethUsdcPerpProductId(), ethPerpPos
             );
         }
         if (btcPerpPos.quantity > 0) {
             perpCrucible.updatePosition(
-                address(0),
-                Commons.getSubAccount(_user, 1),
-                defaults.wbtcUsdcPerpProductId(),
-                btcPerpPos
+                address(0), Commons.getSubAccount(_user, 1), defaults.wbtcUsdcPerpProductId(), btcPerpPos
             );
         }
         vm.stopPrank();
@@ -424,12 +393,8 @@ abstract contract Base_Test is Events, Types, Test {
         productCatalogue.setProduct(defaults.usdcProductId(), defaults.usdcProduct());
         productCatalogue.setProduct(defaults.wethProductId(), defaults.wethProduct());
         productCatalogue.setProduct(defaults.wbtcProductId(), defaults.wbtcProduct());
-        productCatalogue.setProduct(
-            defaults.wethUsdcPerpProductId(), defaults.wethUsdcPerpProduct()
-        );
-        productCatalogue.setProduct(
-            defaults.wbtcUsdcPerpProductId(), defaults.wbtcUsdcPerpProduct()
-        );
+        productCatalogue.setProduct(defaults.wethUsdcPerpProductId(), defaults.wethUsdcPerpProduct());
+        productCatalogue.setProduct(defaults.wbtcUsdcPerpProductId(), defaults.wbtcUsdcPerpProduct());
     }
 
     function depositAssetsToCiao() public {
@@ -492,7 +457,7 @@ abstract contract Base_Test is Events, Types, Test {
         // temporarily switch the order dispatch to users.gov
         // give dan some debt
         addressManifest.updateAddressInManifest(4, users.gov);
-        ciao.executeWithdrawal(users.dan, 1, quantity, asset);
+        ciao.executeWithdrawal(users.dan, 1, defaults.usdcDepositQuantity(), address(usdc));
         ciao.settleCoreCollateral(Commons.getSubAccount(users.dan, 1), debt);
         // temporarily switch the order dispatch to users.gov
         addressManifest.updateAddressInManifest(4, address(orderDispatch));
@@ -539,26 +504,18 @@ abstract contract Base_Test is Events, Types, Test {
         furnace.setProductRiskWeight(defaults.usdcProductId(), defaults.usdcRiskWeights());
         furnace.setProductRiskWeight(defaults.wethProductId(), defaults.wethRiskWeights());
         furnace.setProductRiskWeight(defaults.wbtcProductId(), defaults.wbtcRiskWeights());
-        furnace.setProductRiskWeight(
-            defaults.wethUsdcPerpProductId(), defaults.wethUsdcPerpRiskWeights()
-        );
-        furnace.setProductRiskWeight(
-            defaults.wbtcUsdcPerpProductId(), defaults.wbtcUsdcPerpRiskWeights()
-        );
+        furnace.setProductRiskWeight(defaults.wethUsdcPerpProductId(), defaults.wethUsdcPerpRiskWeights());
+        furnace.setProductRiskWeight(defaults.wbtcUsdcPerpProductId(), defaults.wbtcUsdcPerpRiskWeights());
         furnace.setSpotRiskWeight(address(usdc), defaults.usdcRiskWeights());
         furnace.setSpotRiskWeight(address(weth), defaults.wethRiskWeights());
         furnace.setSpotRiskWeight(address(wbtc), defaults.wbtcRiskWeights());
         furnace.setBaseAssetQuotePerps(address(weth), defaults.wethUsdcPerpProductId());
         furnace.setBaseAssetQuotePerps(address(wbtc), defaults.wbtcUsdcPerpProductId());
         furnace.setSpreadPenalty(
-            address(wbtc),
-            defaults.wbtcSpreadPenalty().initial,
-            defaults.wbtcSpreadPenalty().maintenance
+            address(wbtc), defaults.wbtcSpreadPenalty().initial, defaults.wbtcSpreadPenalty().maintenance
         );
         furnace.setSpreadPenalty(
-            address(weth),
-            defaults.wethSpreadPenalty().initial,
-            defaults.wethSpreadPenalty().maintenance
+            address(weth), defaults.wethSpreadPenalty().initial, defaults.wethSpreadPenalty().maintenance
         );
     }
 
@@ -567,35 +524,21 @@ abstract contract Base_Test is Events, Types, Test {
         addressManifest = new AddressManifest();
         addressManifest.setAdmin(users.gov);
         mockFurnaceUnitTest = new MockFurnaceUnitTest(address(addressManifest));
-        mockFurnaceUnitTest.setProductRiskWeight(
-            defaults.usdcProductId(), defaults.usdcRiskWeights()
-        );
-        mockFurnaceUnitTest.setProductRiskWeight(
-            defaults.wethProductId(), defaults.wethRiskWeights()
-        );
-        mockFurnaceUnitTest.setProductRiskWeight(
-            defaults.usdcProductId(), defaults.usdcRiskWeights()
-        );
-        mockFurnaceUnitTest.setProductRiskWeight(
-            defaults.wethUsdcPerpProductId(), defaults.wethUsdcPerpRiskWeights()
-        );
-        mockFurnaceUnitTest.setProductRiskWeight(
-            defaults.wbtcUsdcPerpProductId(), defaults.wbtcUsdcPerpRiskWeights()
-        );
+        mockFurnaceUnitTest.setProductRiskWeight(defaults.usdcProductId(), defaults.usdcRiskWeights());
+        mockFurnaceUnitTest.setProductRiskWeight(defaults.wethProductId(), defaults.wethRiskWeights());
+        mockFurnaceUnitTest.setProductRiskWeight(defaults.usdcProductId(), defaults.usdcRiskWeights());
+        mockFurnaceUnitTest.setProductRiskWeight(defaults.wethUsdcPerpProductId(), defaults.wethUsdcPerpRiskWeights());
+        mockFurnaceUnitTest.setProductRiskWeight(defaults.wbtcUsdcPerpProductId(), defaults.wbtcUsdcPerpRiskWeights());
         mockFurnaceUnitTest.setSpotRiskWeight(address(usdc), defaults.usdcRiskWeights());
         mockFurnaceUnitTest.setSpotRiskWeight(address(weth), defaults.wethRiskWeights());
         mockFurnaceUnitTest.setSpotRiskWeight(address(wbtc), defaults.wbtcRiskWeights());
         mockFurnaceUnitTest.setBaseAssetQuotePerps(address(weth), defaults.wethUsdcPerpProductId());
         mockFurnaceUnitTest.setBaseAssetQuotePerps(address(wbtc), defaults.wbtcUsdcPerpProductId());
         mockFurnaceUnitTest.setSpreadPenalty(
-            address(wbtc),
-            defaults.wbtcSpreadPenalty().initial,
-            defaults.wbtcSpreadPenalty().maintenance
+            address(wbtc), defaults.wbtcSpreadPenalty().initial, defaults.wbtcSpreadPenalty().maintenance
         );
         mockFurnaceUnitTest.setSpreadPenalty(
-            address(weth),
-            defaults.wethSpreadPenalty().initial,
-            defaults.wethSpreadPenalty().maintenance
+            address(weth), defaults.wethSpreadPenalty().initial, defaults.wethSpreadPenalty().maintenance
         );
 
         vm.label({account: address(mockFurnaceUnitTest), newLabel: "Furnace"});
@@ -606,6 +549,7 @@ abstract contract Base_Test is Events, Types, Test {
     //////////////////////////////////////////////////////////////////////////*/
     function deployLiquidation() internal {
         vm.startPrank({msgSender: users.gov});
+
         liquidation = new Liquidation(address(addressManifest));
     }
 
@@ -638,20 +582,12 @@ abstract contract Base_Test is Events, Types, Test {
 
     /// @dev Expects a call to {ERC20.transferFrom}.
     function expectCallToTransferFrom(address from, address to, uint256 quantity) internal {
-        vm.expectCall({
-            callee: address(usdc),
-            data: abi.encodeCall(ERC20.transferFrom, (from, to, quantity))
-        });
+        vm.expectCall({callee: address(usdc), data: abi.encodeCall(ERC20.transferFrom, (from, to, quantity))});
     }
 
     /// @dev Expects a call to {ERC20.transferFrom}.
-    function expectCallToTransferFromToken(ERC20 asset, address from, address to, uint256 quantity)
-        internal
-    {
-        vm.expectCall({
-            callee: address(asset),
-            data: abi.encodeCall(ERC20.transferFrom, (from, to, quantity))
-        });
+    function expectCallToTransferFromToken(ERC20 asset, address from, address to, uint256 quantity) internal {
+        vm.expectCall({callee: address(asset), data: abi.encodeCall(ERC20.transferFrom, (from, to, quantity))});
     }
 
     function getSpotBalances(address u1, address u2, address a1, address a2)
@@ -669,11 +605,7 @@ abstract contract Base_Test is Events, Types, Test {
         );
     }
 
-    function getCoreCollatBalances(address u1, address u2)
-        public
-        view
-        returns (int256, int256, uint256)
-    {
+    function getCoreCollatBalances(address u1, address u2) public view returns (int256, int256, uint256) {
         return (
             int256(ciao.balances(u1, address(usdc))) - int256(ciao.coreCollateralDebt(u1)),
             int256(ciao.balances(u2, address(usdc))) - int256(ciao.coreCollateralDebt(u2)),
@@ -694,14 +626,9 @@ abstract contract Base_Test is Events, Types, Test {
     }
 
     // TODO: average entry price checks, initCumFundingCheck and isLong check and ciao balance checks
-    function assertPerpBalanceChange(uint256 qdiff, bool isTakerLong, uint32 productId)
-        public
-        view
-    {
+    function assertPerpBalanceChange(uint256 qdiff, bool isTakerLong, uint32 productId) public {
         (Structs.PositionState memory _takeru1pid, Structs.PositionState memory _makeru2pid,) =
-        getPerpBalances(
-            productId, Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
-        );
+            getPerpBalances(productId, Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1));
 
         if (isTakerLong) {
             assertTrue(_takeru1pid.isLong);
@@ -723,42 +650,23 @@ abstract contract Base_Test is Events, Types, Test {
         uint256 executionPrice,
         uint8 txCount
     ) public {
-        (int256 _bcu1, int256 _bcu2, uint256 _bcf) = getCoreCollatBalances(
-            Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
-        );
-        Structs.Product memory product = IProductCatalogue(
-            Commons.productCatalogue(address(addressManifest))
-        ).products(productId);
+        (int256 _bcu1, int256 _bcu2, uint256 _bcf) =
+            getCoreCollatBalances(Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1));
+        Structs.Product memory product =
+            IProductCatalogue(Commons.productCatalogue(address(addressManifest))).products(productId);
         uint256 notional = BasicMath.mul(baseQuantity, executionPrice);
         uint256 takerFee = BasicMath.mul(notional, product.takerFee);
         int256 makerFee = int256(BasicMath.mul(notional, product.makerFee));
         if (product.isMakerRebate) {
             makerFee = -makerFee;
         }
-        assertEq(
-            _bcf - bcf,
-            uint256(int256(takerFee) + makerFee + int256(orderDispatch.txFees(0) * txCount))
-        );
+        assertEq(_bcf - bcf, uint256(int256(takerFee) + makerFee + int256(orderDispatch.txFees(0) * txCount)));
         assertEq(
             bcu1 - _bcu1,
             int256(a1diff) + int256(takerFee + orderDispatch.txFees(0) * txCount),
             "core collat user 1 off"
         );
         assertEq(int256(bcu2) - int256(_bcu2), -int256(a1diff) + makerFee, "core collat user 2 off");
-        bcu1 = _bcu1;
-        bcu2 = _bcu2;
-        bcf = _bcf;
-    }
-
-    // no fees charged on ADL
-    function assertCoreCollatFeeChangeADL(uint256 a1diff) public {
-        (int256 _bcu1, int256 _bcu2, uint256 _bcf) = getCoreCollatBalances(
-            Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1)
-        );
-
-        assertEq(_bcf - bcf, 0);
-        assertEq(bcu1 - _bcu1, int256(a1diff), "core collat user 1 off");
-        assertEq(int256(bcu2) - int256(_bcu2), -int256(a1diff), "core collat user 2 off");
         bcu1 = _bcu1;
         bcu2 = _bcu2;
         bcf = _bcf;
@@ -773,12 +681,8 @@ abstract contract Base_Test is Events, Types, Test {
         uint256 executionPrice,
         uint256 sequencerFee
     ) public {
-        (int256 _u1a1, uint256 _u1a2, int256 _u2a1, uint256 _u2a2, uint256 _fa1, uint256 _fa2) =
-        getSpotBalances(
-            Commons.getSubAccount(users.dan, 1),
-            Commons.getSubAccount(users.alice, 1),
-            address(usdc),
-            address(weth)
+        (int256 _u1a1, uint256 _u1a2, int256 _u2a1, uint256 _u2a2, uint256 _fa1, uint256 _fa2) = getSpotBalances(
+            Commons.getSubAccount(users.dan, 1), Commons.getSubAccount(users.alice, 1), address(usdc), address(weth)
         );
         if (isTakerLong) {
             // user pays sequencer fee on top of a1diff
@@ -794,9 +698,7 @@ abstract contract Base_Test is Events, Types, Test {
             assertEq(u1a2 - _u1a2, a2diff);
             assertEq(_u2a2 - u2a2, a2diff - (_fa2 - fa2));
         }
-        _assertSpotFees(
-            isTakerLong, productId, baseQuantity, executionPrice, _fa1, _fa2, sequencerFee
-        );
+        _assertSpotFees(isTakerLong, productId, baseQuantity, executionPrice, _fa1, _fa2, sequencerFee);
         u1a1 = _u1a1;
         u1a2 = _u1a2;
         u2a1 = _u2a1;
@@ -813,19 +715,13 @@ abstract contract Base_Test is Events, Types, Test {
         uint256 _fa1,
         uint256 _fa2,
         uint256 sequencerFee
-    ) internal view {
+    ) internal {
         (,,,, uint256 takerFee, uint256 makerFee,) = productCatalogue.products(productId);
         if (isTakerLong) {
             assertEq(BasicMath.mul(baseQuantity, takerFee), _fa2 - fa2);
-            assertEq(
-                BasicMath.mul(BasicMath.mul(baseQuantity, executionPrice), makerFee) + sequencerFee,
-                _fa1 - fa1
-            );
+            assertEq(BasicMath.mul(BasicMath.mul(baseQuantity, executionPrice), makerFee) + sequencerFee, _fa1 - fa1);
         } else {
-            assertEq(
-                BasicMath.mul(BasicMath.mul(baseQuantity, executionPrice), takerFee) + sequencerFee,
-                _fa1 - fa1
-            );
+            assertEq(BasicMath.mul(BasicMath.mul(baseQuantity, executionPrice), takerFee) + sequencerFee, _fa1 - fa1);
             assertEq(BasicMath.mul(baseQuantity, makerFee), _fa2 - fa2);
         }
     }
@@ -862,13 +758,13 @@ abstract contract Base_Test is Events, Types, Test {
         }
         s.longAccountBaseBalanceBefore = int256(ciao.balances(s.longAccount, s.baseAsset));
         s.longAccountBaseBalanceAfter = s.longAccountBaseBalanceBefore + int256(basediff) - _fb;
-        s.longAccountQuoteBalanceBefore = int256(ciao.balances(s.longAccount, s.quoteAsset))
-            - int256(ciao.coreCollateralDebt(s.longAccount));
+        s.longAccountQuoteBalanceBefore =
+            int256(ciao.balances(s.longAccount, s.quoteAsset)) - int256(ciao.coreCollateralDebt(s.longAccount));
         s.longAccountQuoteBalanceAfter = s.longAccountQuoteBalanceBefore - int256(quotediff);
         s.shortAccountBaseBalanceBefore = int256(ciao.balances(s.shortAccount, s.baseAsset));
         s.shortAccountBaseBalanceAfter = s.shortAccountBaseBalanceBefore - int256(basediff);
-        s.shortAccountQuoteBalanceBefore = int256(ciao.balances(s.shortAccount, s.quoteAsset))
-            - int256(ciao.coreCollateralDebt(s.shortAccount));
+        s.shortAccountQuoteBalanceBefore =
+            int256(ciao.balances(s.shortAccount, s.quoteAsset)) - int256(ciao.coreCollateralDebt(s.shortAccount));
         s.shortAccountQuoteBalanceAfter = s.shortAccountQuoteBalanceBefore + int256(quotediff) - _fq;
         s.feeRecipientBaseBalanceBefore = int256(ciao.balances(s.feeRecipient, s.baseAsset));
         s.feeRecipientBaseBalanceAfter = s.feeRecipientBaseBalanceBefore + _fb;
@@ -884,56 +780,37 @@ abstract contract Base_Test is Events, Types, Test {
         uint256 baseQuantity,
         uint256 executionPrice
     ) public {
-        SpotBalanceDetailsTemp memory s = _acquireBalanceDetails(
-            a1diff, a2diff, isTakerLong, productId, baseQuantity, executionPrice
-        );
+        SpotBalanceDetailsTemp memory s =
+            _acquireBalanceDetails(a1diff, a2diff, isTakerLong, productId, baseQuantity, executionPrice);
         // long account increment asset 1 gets the first emission
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
-            s.longAccount,
-            s.baseAsset,
-            s.longAccountBaseBalanceBefore,
-            s.longAccountBaseBalanceAfter
+            s.longAccount, s.baseAsset, s.longAccountBaseBalanceBefore, s.longAccountBaseBalanceAfter
         );
         // fee recipient asset 1 goes second
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
-            s.feeRecipient,
-            s.baseAsset,
-            s.feeRecipientBaseBalanceBefore,
-            s.feeRecipientBaseBalanceAfter
+            s.feeRecipient, s.baseAsset, s.feeRecipientBaseBalanceBefore, s.feeRecipientBaseBalanceAfter
         );
         // short account decrement asset 1 goes third
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
-            s.shortAccount,
-            s.baseAsset,
-            s.shortAccountBaseBalanceBefore,
-            s.shortAccountBaseBalanceAfter
+            s.shortAccount, s.baseAsset, s.shortAccountBaseBalanceBefore, s.shortAccountBaseBalanceAfter
         );
         // short account increment asset 2 gets the fourth emission
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
-            s.shortAccount,
-            s.quoteAsset,
-            s.shortAccountQuoteBalanceBefore,
-            s.shortAccountQuoteBalanceAfter
+            s.shortAccount, s.quoteAsset, s.shortAccountQuoteBalanceBefore, s.shortAccountQuoteBalanceAfter
         );
         // fee recipient asset 2 goes fifth
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
-            s.feeRecipient,
-            s.quoteAsset,
-            s.feeRecipientQuoteBalanceBefore,
-            s.feeRecipientQuoteBalanceAfter
+            s.feeRecipient, s.quoteAsset, s.feeRecipientQuoteBalanceBefore, s.feeRecipientQuoteBalanceAfter
         );
         // long account decrement asset 2 goes sixth
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
-            s.longAccount,
-            s.quoteAsset,
-            s.longAccountQuoteBalanceBefore,
-            s.longAccountQuoteBalanceAfter
+            s.longAccount, s.quoteAsset, s.longAccountQuoteBalanceBefore, s.longAccountQuoteBalanceAfter
         );
         if (s.sequencerFee > 0) {
             // sequencer fee deduction goes 7th
@@ -942,8 +819,7 @@ abstract contract Base_Test is Events, Types, Test {
                 isTakerLong ? s.longAccount : s.shortAccount,
                 s.quoteAsset,
                 isTakerLong ? s.longAccountQuoteBalanceAfter : s.shortAccountQuoteBalanceAfter,
-                (isTakerLong ? s.longAccountQuoteBalanceAfter : s.shortAccountQuoteBalanceAfter)
-                    - s.sequencerFee
+                (isTakerLong ? s.longAccountQuoteBalanceAfter : s.shortAccountQuoteBalanceAfter) - s.sequencerFee
             );
             // fee recipient increment by sequencer fee last
             vm.expectEmit(address(ciao));
@@ -956,21 +832,16 @@ abstract contract Base_Test is Events, Types, Test {
         }
     }
 
-    function _acquirePerpQuoteDetails(
-        uint256 a1diff,
-        uint32 productId,
-        uint256 baseQuantity,
-        uint256 executionPrice,
-        bool inclFees // false in case of ADL
-    ) internal view returns (PerpBalanceDetailsTemp memory p) {
-        Structs.Product memory product = IProductCatalogue(
-            Commons.productCatalogue(address(addressManifest))
-        ).products(productId);
+    function _acquirePerpQuoteDetails(uint256 a1diff, uint32 productId, uint256 baseQuantity, uint256 executionPrice)
+        internal
+        view
+        returns (PerpBalanceDetailsTemp memory p)
+    {
+        Structs.Product memory product =
+            IProductCatalogue(Commons.productCatalogue(address(addressManifest))).products(productId);
         uint256 notional = BasicMath.mul(baseQuantity, executionPrice);
-        int256 takerFee = inclFees
-            ? int256(BasicMath.mul(notional, product.takerFee)) + int256(orderDispatch.txFees(0))
-            : int256(0);
-        int256 makerFee = inclFees ? int256(BasicMath.mul(notional, product.makerFee)) : int256(0);
+        int256 takerFee = int256(BasicMath.mul(notional, product.takerFee)) + int256(orderDispatch.txFees(0));
+        int256 makerFee = int256(BasicMath.mul(notional, product.makerFee));
         if (product.isMakerRebate) {
             makerFee = -makerFee;
         }
@@ -994,60 +865,21 @@ abstract contract Base_Test is Events, Types, Test {
         uint256 baseQuantity,
         uint256 executionPrice
     ) public {
-        PerpBalanceDetailsTemp memory p =
-            _acquirePerpQuoteDetails(a1diff, productId, baseQuantity, executionPrice, true);
+        PerpBalanceDetailsTemp memory p = _acquirePerpQuoteDetails(a1diff, productId, baseQuantity, executionPrice);
         // taker settle asset 1 first
         vm.expectEmit(address(ciao));
-        emit Events.BalanceChanged(
-            p.taker, p.quoteAsset, p.takerQuoteBalanceBefore, p.takerQuoteBalanceAfter
-        );
+        emit Events.BalanceChanged(p.taker, p.quoteAsset, p.takerQuoteBalanceBefore, p.takerQuoteBalanceAfter);
         // maker settle asset 1 second
         vm.expectEmit(address(ciao));
-        emit Events.BalanceChanged(
-            p.maker, p.quoteAsset, p.makerQuoteBalanceBefore, p.makerQuoteBalanceAfter
-        );
+        emit Events.BalanceChanged(p.maker, p.quoteAsset, p.makerQuoteBalanceBefore, p.makerQuoteBalanceAfter);
         // fee recipient collects fee asset 1 last
         vm.expectEmit(address(ciao));
         emit Events.BalanceChanged(
-            p.feeRecipient,
-            p.quoteAsset,
-            p.feeRecipientQuoteBalanceBefore,
-            p.feeRecipientQuoteBalanceAfter
+            p.feeRecipient, p.quoteAsset, p.feeRecipientQuoteBalanceBefore, p.feeRecipientQuoteBalanceAfter
         );
     }
 
-    function ensureADLBalanceChangeEventsPerpMatch(
-        uint256 a1diff,
-        uint32 productId,
-        uint256 baseQuantity,
-        uint256 executionPrice
-    ) public {
-        PerpBalanceDetailsTemp memory p =
-            _acquirePerpQuoteDetails(a1diff, productId, baseQuantity, executionPrice, false);
-        // taker settle asset 1 first
-        vm.expectEmit(address(ciao));
-        emit Events.BalanceChanged(
-            p.taker, p.quoteAsset, p.takerQuoteBalanceBefore, p.takerQuoteBalanceAfter
-        );
-        // maker settle asset 1 second
-        vm.expectEmit(address(ciao));
-        emit Events.BalanceChanged(
-            p.maker, p.quoteAsset, p.makerQuoteBalanceBefore, p.makerQuoteBalanceAfter
-        );
-        // fee recipient collects fee asset 1 last
-        vm.expectEmit(address(ciao));
-        emit Events.BalanceChanged(
-            p.feeRecipient,
-            p.quoteAsset,
-            p.feeRecipientQuoteBalanceBefore,
-            p.feeRecipientQuoteBalanceAfter
-        );
-    }
-
-    function makeOrderSig(Structs.Order memory order, string memory user)
-        public
-        returns (bytes memory, bytes32)
-    {
+    function makeOrderSig(Structs.Order memory order, string memory user) public returns (bytes memory, bytes32) {
         (, uint256 privateKey) = makeAddrAndKey(user);
         bytes32 msgHash = orderDispatch.getOrderDigest(order);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, msgHash);
@@ -1121,18 +953,16 @@ abstract contract Base_Test is Events, Types, Test {
         // == quantity(markPrice - avgEntryPrice - (currentCumFunding - initCumFunding))
         // == quantity(markPrice - avgEntryPrice - currentCumFunding + initCumFunding)
         if (isLong) {
-            payoff = int256(quantity).mul(
-                int256(markPrice) - int256(avgEntryPrice) - currentCumFunding + initCumFunding
-            );
+            payoff =
+                int256(quantity).mul(int256(markPrice) - int256(avgEntryPrice) - currentCumFunding + initCumFunding);
         }
         // Case 2: short position
         // quantity is flipped negative to represent short position
         // -quantity * markPrice - (-quantity) * avgEntryPrice - (currentCumFunding - initCumFunding) * (-quantity)
         // == -quantity(markPrice - avgEntryPrice - currentCumFunding + initCumFunding)
         else {
-            payoff = -int256(quantity).mul(
-                int256(markPrice) - int256(avgEntryPrice) - currentCumFunding + initCumFunding
-            );
+            payoff =
+                -int256(quantity).mul(int256(markPrice) - int256(avgEntryPrice) - currentCumFunding + initCumFunding);
         }
     }
 

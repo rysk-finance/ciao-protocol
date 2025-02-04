@@ -41,7 +41,10 @@ library MarginDirective {
                             ? productRiskWeights.initialLongWeight
                             : productRiskWeights.maintenanceLongWeight
                     )
-                ) - int256(avgEntryPrice) - currentCumFunding + initCumFunding
+                ) -
+                    int256(avgEntryPrice) -
+                    currentCumFunding +
+                    initCumFunding
             );
         }
         // Case 2: short position
@@ -57,7 +60,10 @@ library MarginDirective {
                             ? productRiskWeights.initialShortWeight
                             : productRiskWeights.maintenanceShortWeight
                     )
-                ) - int256(avgEntryPrice) - currentCumFunding + initCumFunding
+                ) -
+                    int256(avgEntryPrice) -
+                    currentCumFunding +
+                    initCumFunding
             );
         }
     }
@@ -74,17 +80,22 @@ library MarginDirective {
         int256 initCumFunding,
         int256 currentCumFunding
     ) internal pure returns (int256 health) {
-        return int256(quantity).mul(
-            int256(spotPrice) - int256(perpPrice) + int256(perpEntryPrice) + currentCumFunding
-                - initCumFunding - int256(spreadPenalty.mul((spotPrice + perpPrice) / 2))
-        );
+        return
+            int256(quantity).mul(
+                int(spotPrice) -
+                    int(perpPrice) +
+                    int(perpEntryPrice) +
+                    currentCumFunding -
+                    initCumFunding -
+                    int(spreadPenalty.mul((spotPrice + perpPrice) / 2))
+            );
     }
 
-    function _calculateSpotHealth(uint256 weight, uint256 quantity, uint256 spotPrice)
-        internal
-        pure
-        returns (int256 health)
-    {
+    function _calculateSpotHealth(
+        uint256 weight,
+        uint256 quantity,
+        uint256 spotPrice
+    ) internal pure returns (int256 health) {
         return int256(quantity.mul(weight).mul(spotPrice));
     }
 }

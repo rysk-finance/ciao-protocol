@@ -10,11 +10,11 @@ contract MockLiquidation is Liquidation {
     // Internal
     //////////////////////////////////////
 
-    function getLiquidationPrice(uint32 productId, uint256 oraclePrice, bool isLong)
-        external
-        view
-        returns (uint256 liquidationPrice)
-    {
+    function getLiquidationPrice(
+        uint32 productId,
+        uint256 oraclePrice,
+        bool isLong
+    ) external view returns (uint256 liquidationPrice) {
         return _getLiquidationPrice(productId, oraclePrice, isLong);
     }
 
@@ -23,6 +23,11 @@ contract MockLiquidation is Liquidation {
         uint256 oraclePrice,
         bool isSpot
     ) external view returns (uint256 liquidationPrice) {
-        return _getSpreadLiquidationPrice(spotComponentAddress, oraclePrice, isSpot);
+        return
+            _getSpreadLiquidationPrice(
+                spotComponentAddress,
+                oraclePrice,
+                isSpot
+            );
     }
 }

@@ -31,6 +31,7 @@ contract AddressManifest is Owned {
     /// 5: Liquidation
     /// 6: SpotCrucible
     /// 7: PerpCrucible
+    /// 8: MoveCrucible
     mapping(uint256 => address) public manifest;
     // operator, responsible for calling the order dispatch
     address public operator;
@@ -90,12 +91,7 @@ contract AddressManifest is Owned {
     /// @param subAccountId the id of the sub account to change the signer for
     /// @param approvedSigner the signer to approve as able to sign on behalf of the subAccount
     /// @param isApproved whether to approve the signer or not
-    function approveSigner(
-        address account,
-        uint8 subAccountId,
-        address approvedSigner,
-        bool isApproved
-    ) external {
+    function approveSigner(address account, uint8 subAccountId, address approvedSigner, bool isApproved) external {
         if (requiresDispatchCall) {
             if (msg.sender != manifest[4]) revert Errors.SenderInvalid();
         } else {

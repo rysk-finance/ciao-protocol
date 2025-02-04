@@ -60,20 +60,6 @@ contract ProductCatalogue is AccessControl {
         emit Events.BaseAssetQuoteAssetSpotIdSet(product.baseAsset, product.quoteAsset, productId);
     }
 
-    /// @notice change the baseAsset of an existing product
-    /// @dev used to allow updating of derivatives that do not have a native baseAsset contract address
-    /// @param productId the id of the product to update
-    /// @param baseAsset the new contract address of the base asset for the product
-    function updateProductBaseAsset(uint32 productId, address baseAsset) external {
-        _isAdmin();
-        if (productId == 0) revert Errors.ProductIdInvalid();
-        if (products[productId].productType == 1) revert Errors.ProductIdInvalid();
-        if (baseAsset == address(0)) revert Errors.BaseAssetInvalid();
-        if (products[productId].baseAsset == address(0)) revert Errors.ProductNotSet();
-        products[productId].baseAsset = baseAsset;
-        emit Events.ProductBaseAssetChanged(productId, baseAsset);
-    }
-
     /// @notice Change the tradeability of an existing product
     /// @param productId the id of the product to change the product tradeability for
     /// @param isProductTradeable boolean of whether the product is tradeable or not
@@ -89,12 +75,7 @@ contract ProductCatalogue is AccessControl {
     /// @param takerFee the taker fee to change to
     /// @param makerFee the maker fee to change to
     /// @param isMakerRebate is the maker fee instead meant to be charged as a rebate
-    function changeProductFees(
-        uint32 productId,
-        uint128 takerFee,
-        uint128 makerFee,
-        bool isMakerRebate
-    ) external {
+    function changeProductFees(uint32 productId, uint128 takerFee, uint128 makerFee, bool isMakerRebate) external {
         _isAdmin();
         if (products[productId].baseAsset == address(0)) revert Errors.ProductNotSet();
         if (isMakerRebate) {

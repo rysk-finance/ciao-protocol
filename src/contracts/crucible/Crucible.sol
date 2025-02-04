@@ -28,7 +28,7 @@ abstract contract Crucible is AccessControl {
     function __Crucible_init(address _addressManifest) internal {
         __AccessControl_init(_addressManifest);
     }
-
+    
     // External - Access Controlled
     //////////////////////////////////////
 
@@ -53,7 +53,9 @@ abstract contract Crucible is AccessControl {
     // Basic Getters
     //////////////////////////////////////
 
-    function getOpenPositionIds(address subAccount) external view returns (uint256[] memory) {
+    function getOpenPositionIds(
+        address subAccount
+    ) external view returns (uint256[] memory) {
         return openPositionIds[subAccount].values();
     }
 }

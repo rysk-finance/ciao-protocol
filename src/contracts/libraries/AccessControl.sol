@@ -27,7 +27,10 @@ abstract contract AccessControl {
     }
 
     function _isBalanceUpdater() internal view {
-        require(msg.sender == _orderDispatch() || msg.sender == _liquidation(), "UNAUTHORIZED");
+        require(
+            msg.sender == _orderDispatch() || msg.sender == _liquidation(),
+            "UNAUTHORIZED"
+        );
     }
 
     function _ciao() internal view returns (ICiao) {

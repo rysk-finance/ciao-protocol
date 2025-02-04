@@ -7,15 +7,7 @@ interface IAddressManifest {
     function operator() external view returns (address);
     function admin() external view returns (address);
     function owner() external view returns (address);
-    function approveSigner(
-        address account,
-        uint8 subAccountId,
-        address approvedSigner,
-        bool isApproved
-    ) external;
-    function approvedSigners(address subAccount, address approvedSigner)
-        external
-        view
-        returns (bool);
+    function approveSigner(address account, uint8 subAccountId, address approvedSigner, bool isApproved) external;
+    function approvedSigners(address subAccount, address approvedSigner) external view returns (bool);
     function checkInDigestAsUsed(bytes32 digest) external;
 }

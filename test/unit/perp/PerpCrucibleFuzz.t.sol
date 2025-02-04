@@ -26,10 +26,11 @@ contract PerpCrucibleTest is Base_Test {
         int256 wethCumFunding;
     }
     // set up account with these initial positions
+    Structs.NewPosition initialEthPerpPos =
+        Structs.NewPosition(2000e18, 10e18, true);
 
-    Structs.NewPosition initialEthPerpPos = Structs.NewPosition(2000e18, 10e18, true);
-
-    Structs.NewPosition initialBtcPerpPos = Structs.NewPosition(30000e18, 2e18, false);
+    Structs.NewPosition initialBtcPerpPos =
+        Structs.NewPosition(30000e18, 2e18, false);
 
     function setUp() public virtual override {
         Base_Test.setUp();
@@ -54,7 +55,10 @@ contract PerpCrucibleTest is Base_Test {
 
         // set position
         perpCrucible.updatePosition(
-            address(0), aliceSubAccount, defaults.wbtcUsdcPerpProductId(), initialBtcPos
+            address(0),
+            aliceSubAccount,
+            defaults.wbtcUsdcPerpProductId(),
+            initialBtcPos
         );
         vm.stopPrank();
         if (initialUsdcQuantity > 0) {
@@ -87,7 +91,9 @@ contract PerpCrucibleTest is Base_Test {
             address(0),
             defaults.wbtcUsdcPerpProductId(),
             Structs.NewPosition(
-                initialBtcPos.executionPrice, initialBtcPos.quantity, !initialBtcPos.isLong
+                initialBtcPos.executionPrice,
+                initialBtcPos.quantity,
+                !initialBtcPos.isLong
             )
         );
         vm.stopPrank();
@@ -101,9 +107,10 @@ contract PerpCrucibleTest is Base_Test {
         vm.startPrank({msgSender: users.gov});
     }
 
-    function updateAlicePosMaker(Structs.NewPosition memory btcPos, int256 btcCumFunding)
-        internal
-    {
+    function updateAlicePosMaker(
+        Structs.NewPosition memory btcPos,
+        int256 btcCumFunding
+    ) internal {
         // set funding snapshots
         uint32[] memory perpIds = new uint32[](1);
         perpIds[0] = defaults.wbtcUsdcPerpProductId();
@@ -112,13 +119,17 @@ contract PerpCrucibleTest is Base_Test {
 
         // set position
         perpCrucible.updatePosition(
-            address(0), aliceSubAccount, defaults.wbtcUsdcPerpProductId(), btcPos
+            address(0),
+            aliceSubAccount,
+            defaults.wbtcUsdcPerpProductId(),
+            btcPos
         );
     }
 
-    function updateAlicePosTaker(Structs.NewPosition memory btcPos, int256 btcCumFunding)
-        internal
-    {
+    function updateAlicePosTaker(
+        Structs.NewPosition memory btcPos,
+        int256 btcCumFunding
+    ) internal {
         // set funding snapshots
         uint32[] memory perpIds = new uint32[](1);
         perpIds[0] = defaults.wbtcUsdcPerpProductId();
@@ -130,7 +141,11 @@ contract PerpCrucibleTest is Base_Test {
             aliceSubAccount,
             address(0),
             defaults.wbtcUsdcPerpProductId(),
-            Structs.NewPosition(btcPos.executionPrice, btcPos.quantity, !btcPos.isLong)
+            Structs.NewPosition(
+                btcPos.executionPrice,
+                btcPos.quantity,
+                !btcPos.isLong
+            )
         );
     }
 
@@ -148,31 +163,57 @@ contract PerpCrucibleTest is Base_Test {
         vm.assume(secondBtcPos.executionPrice < 10000000000000000e18);
         vm.assume(thirdBtcPos.executionPrice < 10000000000000000e18);
 
-        vm.assume(secondBtcPos.quantity < 10000000000000000e18 && secondBtcPos.quantity > 0);
-        vm.assume(thirdBtcPos.quantity < 10000000000000000e18 && thirdBtcPos.quantity > 0);
+        vm.assume(
+            secondBtcPos.quantity < 10000000000000000e18 &&
+                secondBtcPos.quantity > 0
+        );
+        vm.assume(
+            thirdBtcPos.quantity < 10000000000000000e18 &&
+                thirdBtcPos.quantity > 0
+        );
 
         validateAssets();
 
         Structs.NewPosition memory initialBtcPos = Structs.NewPosition(
-            initialBtcPosExecutionPrice, initialBtcPosQuantity, initialBtcPosIsLong
+            initialBtcPosExecutionPrice,
+            initialBtcPosQuantity,
+            initialBtcPosIsLong
         );
 
-        openAliceFirstPosMaker(initialBtcPos, initialBtcCumFunding, initialUsdcQuantity);
+        openAliceFirstPosMaker(
+            initialBtcPos,
+            initialBtcCumFunding,
+            initialUsdcQuantity
+        );
         updateAlicePosMaker(secondBtcPos, secondBtcCumFunding);
         updateAlicePosMaker(thirdBtcPos, thirdBtcCumFunding);
 
-        int256 expectedFinalBtcPosQuantity = (
-            initialBtcPos.isLong ? int256(initialBtcPos.quantity) : -int256(initialBtcPos.quantity)
-        ) + (secondBtcPos.isLong ? int256(secondBtcPos.quantity) : -int256(secondBtcPos.quantity))
-            + (thirdBtcPos.isLong ? int256(thirdBtcPos.quantity) : -int256(thirdBtcPos.quantity));
+        int expectedFinalBtcPosQuantity = (
+            initialBtcPos.isLong
+                ? int(initialBtcPos.quantity)
+                : -int(initialBtcPos.quantity)
+        ) +
+            (
+                secondBtcPos.isLong
+                    ? int(secondBtcPos.quantity)
+                    : -int(secondBtcPos.quantity)
+            ) +
+            (
+                thirdBtcPos.isLong
+                    ? int(thirdBtcPos.quantity)
+                    : -int(thirdBtcPos.quantity)
+            );
 
-        Structs.PositionState memory actualPos =
-            perpCrucible.getSubAccountPosition(defaults.wbtcUsdcPerpProductId(), aliceSubAccount);
+        Structs.PositionState memory actualPos = perpCrucible
+            .getSubAccountPosition(
+                defaults.wbtcUsdcPerpProductId(),
+                aliceSubAccount
+            );
         assertEq(
             actualPos.quantity,
             expectedFinalBtcPosQuantity > 0
-                ? uint256(expectedFinalBtcPosQuantity)
-                : uint256(-expectedFinalBtcPosQuantity)
+                ? uint(expectedFinalBtcPosQuantity)
+                : uint(-expectedFinalBtcPosQuantity)
         );
 
         assertEq(expectedFinalBtcPosQuantity > 0, actualPos.isLong);
@@ -192,31 +233,57 @@ contract PerpCrucibleTest is Base_Test {
         vm.assume(secondBtcPos.executionPrice < 10000000000000000e18);
         vm.assume(thirdBtcPos.executionPrice < 10000000000000000e18);
 
-        vm.assume(secondBtcPos.quantity < 10000000000000000e18 && secondBtcPos.quantity > 0);
-        vm.assume(thirdBtcPos.quantity < 10000000000000000e18 && thirdBtcPos.quantity > 0);
+        vm.assume(
+            secondBtcPos.quantity < 10000000000000000e18 &&
+                secondBtcPos.quantity > 0
+        );
+        vm.assume(
+            thirdBtcPos.quantity < 10000000000000000e18 &&
+                thirdBtcPos.quantity > 0
+        );
 
         validateAssets();
 
         Structs.NewPosition memory initialBtcPos = Structs.NewPosition(
-            initialBtcPosExecutionPrice, initialBtcPosQuantity, initialBtcPosIsLong
+            initialBtcPosExecutionPrice,
+            initialBtcPosQuantity,
+            initialBtcPosIsLong
         );
 
-        openAliceFirstPosTaker(initialBtcPos, initialBtcCumFunding, initialUsdcQuantity);
+        openAliceFirstPosTaker(
+            initialBtcPos,
+            initialBtcCumFunding,
+            initialUsdcQuantity
+        );
         updateAlicePosTaker(secondBtcPos, secondBtcCumFunding);
         updateAlicePosTaker(thirdBtcPos, thirdBtcCumFunding);
 
-        int256 expectedFinalBtcPosQuantity = (
-            initialBtcPos.isLong ? int256(initialBtcPos.quantity) : -int256(initialBtcPos.quantity)
-        ) + (secondBtcPos.isLong ? int256(secondBtcPos.quantity) : -int256(secondBtcPos.quantity))
-            + (thirdBtcPos.isLong ? int256(thirdBtcPos.quantity) : -int256(thirdBtcPos.quantity));
+        int expectedFinalBtcPosQuantity = (
+            initialBtcPos.isLong
+                ? int(initialBtcPos.quantity)
+                : -int(initialBtcPos.quantity)
+        ) +
+            (
+                secondBtcPos.isLong
+                    ? int(secondBtcPos.quantity)
+                    : -int(secondBtcPos.quantity)
+            ) +
+            (
+                thirdBtcPos.isLong
+                    ? int(thirdBtcPos.quantity)
+                    : -int(thirdBtcPos.quantity)
+            );
 
-        Structs.PositionState memory actualPos =
-            perpCrucible.getSubAccountPosition(defaults.wbtcUsdcPerpProductId(), aliceSubAccount);
+        Structs.PositionState memory actualPos = perpCrucible
+            .getSubAccountPosition(
+                defaults.wbtcUsdcPerpProductId(),
+                aliceSubAccount
+            );
         assertEq(
             actualPos.quantity,
             expectedFinalBtcPosQuantity > 0
-                ? uint256(expectedFinalBtcPosQuantity)
-                : uint256(-expectedFinalBtcPosQuantity)
+                ? uint(expectedFinalBtcPosQuantity)
+                : uint(-expectedFinalBtcPosQuantity)
         );
 
         assertEq(expectedFinalBtcPosQuantity > 0, actualPos.isLong);
@@ -234,8 +301,14 @@ contract PerpCrucibleTest is Base_Test {
     ) public {
         vm.assume(initialBtcPosExecutionPrice < 10000000000000000e18);
         vm.assume(secondBtcPosExecutionPrice < 10000000000000000e18);
-        vm.assume(initialBtcPosQuantity < 10000000000000000e18 && initialBtcPosQuantity > 0);
-        vm.assume(secondBtcPosQuantity < 10000000000000000e18 && secondBtcPosQuantity > 0);
+        vm.assume(
+            initialBtcPosQuantity < 10000000000000000e18 &&
+                initialBtcPosQuantity > 0
+        );
+        vm.assume(
+            secondBtcPosQuantity < 10000000000000000e18 &&
+                secondBtcPosQuantity > 0
+        );
 
         vm.startPrank({msgSender: users.gov});
         // set funding snapshots
@@ -249,12 +322,18 @@ contract PerpCrucibleTest is Base_Test {
         // set initial position
 
         Structs.NewPosition memory initialBtcPos = Structs.NewPosition(
-            initialBtcPosExecutionPrice, initialBtcPosQuantity, initialBtcPosIsLong
+            initialBtcPosExecutionPrice,
+            initialBtcPosQuantity,
+            initialBtcPosIsLong
         );
 
-        (int256 aliceRealisedPnl, int256 danRealisedPnl) = perpCrucible.updatePosition(
-            aliceSubAccount, danSubAccount, defaults.wbtcUsdcPerpProductId(), initialBtcPos
-        );
+        (int256 aliceRealisedPnl, int256 danRealisedPnl) = perpCrucible
+            .updatePosition(
+                aliceSubAccount,
+                danSubAccount,
+                defaults.wbtcUsdcPerpProductId(),
+                initialBtcPos
+            );
         assertEq(aliceRealisedPnl, 0);
         assertEq(danRealisedPnl, 0);
 
@@ -267,11 +346,16 @@ contract PerpCrucibleTest is Base_Test {
         // set second position
 
         Structs.NewPosition memory secondBtcPos = Structs.NewPosition(
-            secondBtcPosExecutionPrice, secondBtcPosQuantity, secondBtcPosIsLong
+            secondBtcPosExecutionPrice,
+            secondBtcPosQuantity,
+            secondBtcPosIsLong
         );
 
         (aliceRealisedPnl, danRealisedPnl) = perpCrucible.updatePosition(
-            aliceSubAccount, danSubAccount, defaults.wbtcUsdcPerpProductId(), secondBtcPos
+            aliceSubAccount,
+            danSubAccount,
+            defaults.wbtcUsdcPerpProductId(),
+            secondBtcPos
         );
 
         assertEq(aliceRealisedPnl, -danRealisedPnl);

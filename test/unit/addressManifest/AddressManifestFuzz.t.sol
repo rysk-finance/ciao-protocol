@@ -25,14 +25,19 @@ contract AddressManifestBaseTest is Base_Test {
         assertEq(addressManifest.manifest(1), newAddress);
     }
 
-    function test_Happy_UpdateManifestFuzzAddressAndId(address newAddress, uint256 id) public {
+    function test_Happy_UpdateManifestFuzzAddressAndId(
+        address newAddress,
+        uint256 id
+    ) public {
         vm.expectEmit(address(addressManifest));
         emit Events.ManifestUpdated(id, newAddress);
         addressManifest.updateAddressInManifest(id, newAddress);
         assertEq(addressManifest.manifest(id), newAddress);
     }
 
-    function test_Fail_UpdateManifestWithNotOwnerFuzzSender(address hackerman) public {
+    function test_Fail_UpdateManifestWithNotOwnerFuzzSender(
+        address hackerman
+    ) public {
         vm.expectEmit(address(addressManifest));
         emit Events.ManifestUpdated(uint256(1), users.recipient);
         addressManifest.updateAddressInManifest(uint256(1), users.recipient);

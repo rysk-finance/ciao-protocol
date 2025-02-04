@@ -10,6 +10,7 @@ interface Errors {
     error DepositQuantityInvalid();
     error WithdrawQuantityInvalid();
     error SubAccountHasPositions();
+    error MinimumWaitTimeNotPassed();
 
     // OrderDispatch Errors
     ////////////////////////
@@ -24,7 +25,6 @@ interface Errors {
     error SubAccountHealthy();
     error NoCoreCollateralDebt();
     error OrderByteLengthInvalid();
-    error AdminApprovedSignerFalse();
 
     // ProductCatalogue Errors
     ///////////////////////////

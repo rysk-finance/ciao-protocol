@@ -8,23 +8,34 @@ interface Events {
     ////////////////////////
 
     event Deposit(
-        address indexed account, uint8 indexed subAccountId, address indexed asset, uint256 quantity
+        address indexed account,
+        uint8 indexed subAccountId,
+        address indexed asset,
+        uint256 quantity
     );
     event RequestWithdrawal(
-        address indexed account, uint8 indexed subAccountId, address indexed asset, uint256 quantity
+        address indexed account,
+        uint8 indexed subAccountId,
+        address indexed asset,
+        uint256 quantity
     );
     event ExecuteWithdrawal(
-        address indexed account, uint8 indexed subAccountId, address indexed asset, uint256 quantity
+        address indexed account,
+        uint8 indexed subAccountId,
+        address indexed asset,
+        uint256 quantity
     );
     event BalanceChanged(
-        address indexed subAccount, address indexed asset, int256 balanceBefore, int256 balanceAfter
+        address indexed subAccount,
+        address indexed asset,
+        int256 balanceBefore,
+        int256 balanceAfter
     );
 
+    event FeeRecipientChanged(address feeRecipient);
     event InsuranceChanged(address insurance);
     event MinDepositAmountChanged(address asset, uint256 minDepositAmount);
-    event FeeRecipientChanged(address feeRecipient);
     event CoreCollateralAddressChanged(address coreCollateralAddress);
-    event WithdrawalFeeChanged(address asset, uint256 withdrawalFee);
 
     // OrderDispatch Events
     //////////////////////////////////////
@@ -48,9 +59,15 @@ interface Events {
     // Product Catalogue Events
     ////////////////////////////
 
-    event ProductTradeabilityChanged(uint32 indexed productId, bool isProductTradeable);
+    event ProductTradeabilityChanged(
+        uint32 indexed productId,
+        bool isProductTradeable
+    );
     event ProductFeesChanged(
-        uint32 indexed productId, uint256 takerFee, uint256 makerFee, bool isMakerRebate
+        uint32 indexed productId,
+        uint256 takerFee,
+        uint256 makerFee,
+        bool isMakerRebate
     );
     event ProductSet(
         uint32 indexed productId,
@@ -62,9 +79,10 @@ interface Events {
         bool isMakerRebate
     );
     event BaseAssetQuoteAssetSpotIdSet(
-        address indexed baseAsset, address indexed quoteAsset, uint32 productId
+        address indexed baseAsset,
+        address indexed quoteAsset,
+        uint32 productId
     );
-    event ProductBaseAssetChanged(uint32 productId, address baseAsset);
 
     // Furnace Events
     //////////////////////////////////////
@@ -84,18 +102,22 @@ interface Events {
         uint64 maintenanceShortWeight
     );
 
-    event SpreadPenaltySet(address indexed spotAsset, uint64 initial, uint64 maintenance);
+    event SpreadPenaltySet(
+        address indexed spotAsset,
+        uint64 initial,
+        uint64 maintenance
+    );
     event BaseAssetQuotePerpSet(address indexed spotAddress, uint32 productId);
 
     // Liquidation Events
     //////////////////////////////////////
 
     event RequiresDispatchCallSet(bool requiresDispatchCall);
-    event Liquidated( // for a spread this is the perpId
+    event Liquidated(
         address liquidator,
         address liquidatee,
         uint8 mode,
-        uint32 productId,
+        uint32 productId, // for a spread this is the perpId
         uint256 quantity,
         uint256 liquidationPrice,
         uint256 liquidationFees
@@ -103,7 +125,6 @@ interface Events {
     event LiqPriceNumeratorSet(uint256 liqPriceNumerator);
     event LiqPriceDenominatorSet(uint256 liqPriceDenominator);
     event LiquidationFeeFractionSet(uint256 liquidationFeeFraction);
-    event LiquidationHealthBufferSet(uint256 liquidationHealthBuffer);
 
     // Perp Crucible Events
     //////////////////////////////////////

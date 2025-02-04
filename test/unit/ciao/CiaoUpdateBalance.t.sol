@@ -20,7 +20,12 @@ contract CiaoUpdateBalanceBaseTest is Base_Test {
         uint256 wethQuantity = defaults.wethDepositQuantity();
         uint256 usdcQuantity = defaults.usdcDepositQuantityE18();
         ensureBalanceChangeEventsSpotMatch(
-            usdcQuantity, wethQuantity, false, defaults.wethProductId(), 0, 0
+            usdcQuantity,
+            wethQuantity,
+            false,
+            defaults.wethProductId(),
+            0,
+            0
         );
         ciao.updateBalance(
             subAccount1,
@@ -34,26 +39,49 @@ contract CiaoUpdateBalanceBaseTest is Base_Test {
             0
         );
         assertEq(ciao.balances(subAccount1, address(usdc)), 0);
-        assertEq(ciao.balances(subAccount1, address(weth)), defaults.wethDepositQuantity() * 2);
+        assertEq(
+            ciao.balances(subAccount1, address(weth)),
+            defaults.wethDepositQuantity() * 2
+        );
         assertEq(ciao.balances(subAccount2, address(weth)), 0);
         assertEq(ciao.balances(subAccount2, address(usdc)), usdcQuantity * 2);
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount1, address(weth)));
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount2, address(usdc)));
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount1, address(usdc)));
-        assertFalse(ciao.isAssetInSubAccountAssetSet(subAccount2, address(weth)));
-        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount1, 1), address(weth));
-        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount2, 0), address(usdc));
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount1, address(weth))
+        );
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount2, address(usdc))
+        );
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount1, address(usdc))
+        );
+        assertFalse(
+            ciao.isAssetInSubAccountAssetSet(subAccount2, address(weth))
+        );
+        assertEq(
+            ciao.assetAtIndexInSubAccountAssetSet(subAccount1, 1),
+            address(weth)
+        );
+        assertEq(
+            ciao.assetAtIndexInSubAccountAssetSet(subAccount2, 0),
+            address(usdc)
+        );
         assertEq(ciao.subAccountAssetSetLength(subAccount1), 2);
         assertEq(ciao.subAccountAssetSetLength(subAccount2), 1);
-        address[] memory subAccount1Assets = ciao.getSubAccountAssets(subAccount1);
+        address[] memory subAccount1Assets = ciao.getSubAccountAssets(
+            subAccount1
+        );
         assertEq(subAccount1Assets[0], address(usdc));
         assertEq(subAccount1Assets.length, 2);
-        address[] memory subAccount2Assets = ciao.getSubAccountAssets(subAccount2);
+        address[] memory subAccount2Assets = ciao.getSubAccountAssets(
+            subAccount2
+        );
         assertEq(subAccount2Assets[0], address(usdc));
         assertEq(subAccount2Assets.length, 1);
     }
 
-    function test_Happy_Update_Balance_Full_Balance_Account_2_With_Debt() public {
+    function test_Happy_Update_Balance_Full_Balance_Account_2_With_Debt()
+        public
+    {
         depositAssetsToCiaoAndSwitchGov();
         address subAccount1 = Commons.getSubAccount(users.alice, 1);
         address subAccount2 = Commons.getSubAccount(users.dan, 1);
@@ -65,13 +93,23 @@ contract CiaoUpdateBalanceBaseTest is Base_Test {
             subAccount2,
             address(usdc),
             int256(ciao.balances(subAccount2, address(usdc))),
-            int256(ciao.balances(subAccount2, address(usdc))) - int256(usdcQuantity) + debtQuantity
+            int256(ciao.balances(subAccount2, address(usdc))) -
+                int256(usdcQuantity) +
+                debtQuantity
         );
-        ciao.settleCoreCollateral(subAccount2, -int256(usdcQuantity) + debtQuantity);
+        ciao.settleCoreCollateral(
+            subAccount2,
+            -int256(usdcQuantity) + debtQuantity
+        );
         assertEq(ciao.balances(subAccount2, address(usdc)), 0);
         assertEq(ciao.coreCollateralDebt(subAccount2), uint256(-debtQuantity));
         ensureBalanceChangeEventsSpotMatch(
-            usdcQuantity, wethQuantity, false, defaults.wethProductId(), 0, 0
+            usdcQuantity,
+            wethQuantity,
+            false,
+            defaults.wethProductId(),
+            0,
+            0
         );
         ciao.updateBalance(
             subAccount1,
@@ -85,24 +123,51 @@ contract CiaoUpdateBalanceBaseTest is Base_Test {
             0
         );
         assertEq(ciao.balances(subAccount1, address(usdc)), 0);
-        assertEq(ciao.balances(subAccount1, address(weth)), defaults.wethDepositQuantity() * 2);
+        assertEq(
+            ciao.balances(subAccount1, address(weth)),
+            defaults.wethDepositQuantity() * 2
+        );
         assertEq(ciao.balances(subAccount2, address(weth)), 0);
-        assertEq(ciao.balances(subAccount2, address(usdc)), usdcQuantity - (uint256(-debtQuantity)));
+        assertEq(
+            ciao.balances(subAccount2, address(usdc)),
+            usdcQuantity - (uint256(-debtQuantity))
+        );
         assertEq(ciao.coreCollateralDebt(subAccount2), 0);
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount1, address(weth)));
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount2, address(usdc)));
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount1, address(usdc)));
-        assertFalse(ciao.isAssetInSubAccountAssetSet(subAccount2, address(weth)));
-        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount1, 0), address(usdc));
-        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount1, 1), address(weth));
-        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount2, 0), address(usdc));
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount1, address(weth))
+        );
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount2, address(usdc))
+        );
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount1, address(usdc))
+        );
+        assertFalse(
+            ciao.isAssetInSubAccountAssetSet(subAccount2, address(weth))
+        );
+        assertEq(
+            ciao.assetAtIndexInSubAccountAssetSet(subAccount1, 0),
+            address(usdc)
+        );
+        assertEq(
+            ciao.assetAtIndexInSubAccountAssetSet(subAccount1, 1),
+            address(weth)
+        );
+        assertEq(
+            ciao.assetAtIndexInSubAccountAssetSet(subAccount2, 0),
+            address(usdc)
+        );
         assertEq(ciao.subAccountAssetSetLength(subAccount1), 2);
         assertEq(ciao.subAccountAssetSetLength(subAccount2), 1);
-        address[] memory subAccount1Assets = ciao.getSubAccountAssets(subAccount1);
+        address[] memory subAccount1Assets = ciao.getSubAccountAssets(
+            subAccount1
+        );
         assertEq(subAccount1Assets[0], address(usdc));
         assertEq(subAccount1Assets[1], address(weth));
         assertEq(subAccount1Assets.length, 2);
-        address[] memory subAccount2Assets = ciao.getSubAccountAssets(subAccount2);
+        address[] memory subAccount2Assets = ciao.getSubAccountAssets(
+            subAccount2
+        );
         assertEq(subAccount2Assets[0], address(usdc));
         assertEq(subAccount2Assets.length, 1);
     }
@@ -114,7 +179,12 @@ contract CiaoUpdateBalanceBaseTest is Base_Test {
         uint256 wethQuantity = defaults.wethDepositQuantity() / 2;
         uint256 usdcQuantity = defaults.usdcDepositQuantityE18() / 2;
         ensureBalanceChangeEventsSpotMatch(
-            usdcQuantity, wethQuantity, false, defaults.wethProductId(), 0, 0
+            usdcQuantity,
+            wethQuantity,
+            false,
+            defaults.wethProductId(),
+            0,
+            0
         );
         ciao.updateBalance(
             subAccount1,
@@ -127,31 +197,61 @@ contract CiaoUpdateBalanceBaseTest is Base_Test {
             0,
             0
         );
-        assertEq(ciao.balances(subAccount1, address(usdc)), defaults.usdcDepositQuantityE18() / 2);
+        assertEq(
+            ciao.balances(subAccount1, address(usdc)),
+            defaults.usdcDepositQuantityE18() / 2
+        );
         assertEq(
             ciao.balances(subAccount1, address(weth)),
             (defaults.wethDepositQuantity() * 3e18) / 2e18
         );
-        assertEq(ciao.balances(subAccount2, address(weth)), defaults.wethDepositQuantity() / 2);
+        assertEq(
+            ciao.balances(subAccount2, address(weth)),
+            defaults.wethDepositQuantity() / 2
+        );
         assertEq(
             ciao.balances(subAccount2, address(usdc)),
             (defaults.usdcDepositQuantityE18() * 3e18) / 2e18
         );
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount1, address(weth)));
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount2, address(usdc)));
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount1, address(usdc)));
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount2, address(weth)));
-        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount1, 0), address(usdc));
-        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount1, 1), address(weth));
-        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount2, 0), address(usdc));
-        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount2, 1), address(weth));
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount1, address(weth))
+        );
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount2, address(usdc))
+        );
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount1, address(usdc))
+        );
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount2, address(weth))
+        );
+        assertEq(
+            ciao.assetAtIndexInSubAccountAssetSet(subAccount1, 0),
+            address(usdc)
+        );
+        assertEq(
+            ciao.assetAtIndexInSubAccountAssetSet(subAccount1, 1),
+            address(weth)
+        );
+        assertEq(
+            ciao.assetAtIndexInSubAccountAssetSet(subAccount2, 0),
+            address(usdc)
+        );
+        assertEq(
+            ciao.assetAtIndexInSubAccountAssetSet(subAccount2, 1),
+            address(weth)
+        );
         assertEq(ciao.subAccountAssetSetLength(subAccount1), 2);
         assertEq(ciao.subAccountAssetSetLength(subAccount2), 2);
-        address[] memory subAccount1Assets = ciao.getSubAccountAssets(subAccount1);
+        address[] memory subAccount1Assets = ciao.getSubAccountAssets(
+            subAccount1
+        );
         assertEq(subAccount1Assets[0], address(usdc));
         assertEq(subAccount1Assets[1], address(weth));
         assertEq(subAccount1Assets.length, 2);
-        address[] memory subAccount2Assets = ciao.getSubAccountAssets(subAccount2);
+        address[] memory subAccount2Assets = ciao.getSubAccountAssets(
+            subAccount2
+        );
         assertEq(subAccount2Assets[0], address(usdc));
         assertEq(subAccount2Assets[1], address(weth));
         assertEq(subAccount2Assets.length, 2);
@@ -164,7 +264,12 @@ contract CiaoUpdateBalanceBaseTest is Base_Test {
         uint256 wethQuantity = defaults.wethDepositQuantity() / 2;
         uint256 usdcQuantity = defaults.usdcDepositQuantityE18() / 2;
         ensureBalanceChangeEventsSpotMatch(
-            usdcQuantity, wethQuantity, true, defaults.wethProductId(), 0, 0
+            usdcQuantity,
+            wethQuantity,
+            true,
+            defaults.wethProductId(),
+            0,
+            0
         );
         ciao.updateBalance(
             subAccount1,
@@ -182,32 +287,61 @@ contract CiaoUpdateBalanceBaseTest is Base_Test {
             ciao.balances(subAccount2, address(weth)),
             (defaults.wethDepositQuantity() * 3e18) / 2e18
         );
-        assertEq(ciao.balances(subAccount1, address(weth)), defaults.wethDepositQuantity() / 2);
+        assertEq(
+            ciao.balances(subAccount1, address(weth)),
+            defaults.wethDepositQuantity() / 2
+        );
         assertEq(
             ciao.balances(subAccount1, address(usdc)),
             (defaults.usdcDepositQuantityE18() * 3e18) / 2e18
         );
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount2, address(weth)));
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount1, address(usdc)));
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount2, address(usdc)));
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount1, address(weth)));
-        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount2, 0), address(usdc));
-        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount2, 1), address(weth));
-        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount1, 0), address(usdc));
-        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount1, 1), address(weth));
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount2, address(weth))
+        );
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount1, address(usdc))
+        );
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount2, address(usdc))
+        );
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount1, address(weth))
+        );
+        assertEq(
+            ciao.assetAtIndexInSubAccountAssetSet(subAccount2, 0),
+            address(usdc)
+        );
+        assertEq(
+            ciao.assetAtIndexInSubAccountAssetSet(subAccount2, 1),
+            address(weth)
+        );
+        assertEq(
+            ciao.assetAtIndexInSubAccountAssetSet(subAccount1, 0),
+            address(usdc)
+        );
+        assertEq(
+            ciao.assetAtIndexInSubAccountAssetSet(subAccount1, 1),
+            address(weth)
+        );
         assertEq(ciao.subAccountAssetSetLength(subAccount2), 2);
         assertEq(ciao.subAccountAssetSetLength(subAccount1), 2);
-        address[] memory subAccount2Assets = ciao.getSubAccountAssets(subAccount2);
+        address[] memory subAccount2Assets = ciao.getSubAccountAssets(
+            subAccount2
+        );
         assertEq(subAccount2Assets[0], address(usdc));
         assertEq(subAccount2Assets[1], address(weth));
         assertEq(subAccount2Assets.length, 2);
-        address[] memory subAccount1Assets = ciao.getSubAccountAssets(subAccount2);
+        address[] memory subAccount1Assets = ciao.getSubAccountAssets(
+            subAccount2
+        );
         assertEq(subAccount1Assets[0], address(usdc));
         assertEq(subAccount1Assets[1], address(weth));
         assertEq(subAccount1Assets.length, 2);
     }
 
-    function test_Happy_Update_Balance_Full_Balance_Account_1_With_Debt() public {
+    function test_Happy_Update_Balance_Full_Balance_Account_1_With_Debt()
+        public
+    {
         depositAssetsToCiaoAndSwitchGov();
         address subAccount1 = Commons.getSubAccount(users.alice, 1);
         address subAccount2 = Commons.getSubAccount(users.dan, 1);
@@ -219,13 +353,23 @@ contract CiaoUpdateBalanceBaseTest is Base_Test {
             subAccount1,
             address(usdc),
             int256(ciao.balances(subAccount1, address(usdc))),
-            int256(ciao.balances(subAccount1, address(usdc))) - int256(usdcQuantity) + debtQuantity
+            int256(ciao.balances(subAccount1, address(usdc))) -
+                int256(usdcQuantity) +
+                debtQuantity
         );
-        ciao.settleCoreCollateral(subAccount1, -int256(usdcQuantity) + debtQuantity);
+        ciao.settleCoreCollateral(
+            subAccount1,
+            -int256(usdcQuantity) + debtQuantity
+        );
         assertEq(ciao.balances(subAccount1, address(usdc)), 0);
         assertEq(ciao.coreCollateralDebt(subAccount1), uint256(-debtQuantity));
         ensureBalanceChangeEventsSpotMatch(
-            usdcQuantity, wethQuantity, true, defaults.wethProductId(), 0, 0
+            usdcQuantity,
+            wethQuantity,
+            true,
+            defaults.wethProductId(),
+            0,
+            0
         );
         ciao.updateBalance(
             subAccount1,
@@ -241,20 +385,41 @@ contract CiaoUpdateBalanceBaseTest is Base_Test {
         assertEq(ciao.balances(subAccount2, address(usdc)), 0);
         assertEq(ciao.balances(subAccount2, address(weth)), wethQuantity * 2);
         assertEq(ciao.balances(subAccount1, address(weth)), 0);
-        assertEq(ciao.balances(subAccount1, address(usdc)), usdcQuantity - (uint256(-debtQuantity)));
+        assertEq(
+            ciao.balances(subAccount1, address(usdc)),
+            usdcQuantity - (uint256(-debtQuantity))
+        );
         assertEq(ciao.coreCollateralDebt(subAccount1), 0);
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount2, address(weth)));
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount1, address(usdc)));
-        assertTrue(ciao.isAssetInSubAccountAssetSet(subAccount2, address(usdc)));
-        assertFalse(ciao.isAssetInSubAccountAssetSet(subAccount1, address(weth)));
-        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount2, 1), address(weth));
-        assertEq(ciao.assetAtIndexInSubAccountAssetSet(subAccount1, 0), address(usdc));
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount2, address(weth))
+        );
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount1, address(usdc))
+        );
+        assertTrue(
+            ciao.isAssetInSubAccountAssetSet(subAccount2, address(usdc))
+        );
+        assertFalse(
+            ciao.isAssetInSubAccountAssetSet(subAccount1, address(weth))
+        );
+        assertEq(
+            ciao.assetAtIndexInSubAccountAssetSet(subAccount2, 1),
+            address(weth)
+        );
+        assertEq(
+            ciao.assetAtIndexInSubAccountAssetSet(subAccount1, 0),
+            address(usdc)
+        );
         assertEq(ciao.subAccountAssetSetLength(subAccount2), 2);
         assertEq(ciao.subAccountAssetSetLength(subAccount1), 1);
-        address[] memory subAccount2Assets = ciao.getSubAccountAssets(subAccount2);
+        address[] memory subAccount2Assets = ciao.getSubAccountAssets(
+            subAccount2
+        );
         assertEq(subAccount2Assets[0], address(usdc));
         assertEq(subAccount2Assets.length, 2);
-        address[] memory subAccount1Assets = ciao.getSubAccountAssets(subAccount1);
+        address[] memory subAccount1Assets = ciao.getSubAccountAssets(
+            subAccount1
+        );
         assertEq(subAccount1Assets[0], address(usdc));
         assertEq(subAccount1Assets.length, 1);
     }
@@ -268,7 +433,15 @@ contract CiaoUpdateBalanceBaseTest is Base_Test {
         uint32 wethProductId = defaults.wethProductId();
         vm.expectRevert(bytes4(keccak256("BalanceInsufficient()")));
         ciao.updateBalance(
-            subAccount1, subAccount2, wethQuantity, usdcQuantity + 1, wethProductId, true, 0, 0, 0
+            subAccount1,
+            subAccount2,
+            wethQuantity,
+            usdcQuantity + 1,
+            wethProductId,
+            true,
+            0,
+            0,
+            0
         );
     }
 
@@ -281,7 +454,15 @@ contract CiaoUpdateBalanceBaseTest is Base_Test {
         uint32 wethProductId = defaults.wethProductId();
         vm.expectRevert(bytes4(keccak256("BalanceInsufficient()")));
         ciao.updateBalance(
-            subAccount1, subAccount2, wethQuantity + 1, usdcQuantity, wethProductId, true, 0, 0, 0
+            subAccount1,
+            subAccount2,
+            wethQuantity + 1,
+            usdcQuantity,
+            wethProductId,
+            true,
+            0,
+            0,
+            0
         );
     }
 
@@ -294,7 +475,15 @@ contract CiaoUpdateBalanceBaseTest is Base_Test {
         uint32 wethProductId = defaults.wethProductId();
         vm.expectRevert(bytes4(keccak256("BalanceInsufficient()")));
         ciao.updateBalance(
-            subAccount1, subAccount2, wethQuantity + 1, usdcQuantity, wethProductId, false, 0, 0, 0
+            subAccount1,
+            subAccount2,
+            wethQuantity + 1,
+            usdcQuantity,
+            wethProductId,
+            false,
+            0,
+            0,
+            0
         );
     }
 
@@ -307,7 +496,15 @@ contract CiaoUpdateBalanceBaseTest is Base_Test {
         uint32 wethProductId = defaults.wethProductId();
         vm.expectRevert(bytes4(keccak256("BalanceInsufficient()")));
         ciao.updateBalance(
-            subAccount1, subAccount2, wethQuantity, usdcQuantity + 1, wethProductId, false, 0, 0, 0
+            subAccount1,
+            subAccount2,
+            wethQuantity,
+            usdcQuantity + 1,
+            wethProductId,
+            false,
+            0,
+            0,
+            0
         );
     }
 
