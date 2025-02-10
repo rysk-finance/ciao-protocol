@@ -35,6 +35,7 @@ interface Errors {
     error QuoteAssetInvalid();
     error ProductAlreadySet();
     error MakerRebateFeeInvalid();
+    error SpotPairAlreadyExists();
 
     // Furnace Errors
     ///////////////////////////

@@ -55,6 +55,7 @@ contract ProductCatalogue is AccessControl {
             product.isMakerRebate
         );
         if (product.productType == 1) {
+        if (baseAssetQuoteAssetSpotIds[product.baseAsset][product.quoteAsset] != 0) revert Errors.SpotPairAlreadyExists();
             baseAssetQuoteAssetSpotIds[product.baseAsset][product.quoteAsset] = productId;
         }
         emit Events.BaseAssetQuoteAssetSpotIdSet(product.baseAsset, product.quoteAsset, productId);

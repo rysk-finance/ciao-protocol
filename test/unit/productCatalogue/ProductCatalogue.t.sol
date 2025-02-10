@@ -153,6 +153,24 @@ contract ProductCatalogueBaseTest is Base_Test {
         productCatalogue.setProduct(usdcProductId, product);
     }
 
+    function test_Fail_SetProduct_spot_pair_already_exists() public {
+        uint32 usdcProductId = defaults.usdcProductId();
+        Structs.Product memory product = defaults.usdcProduct();
+        vm.expectEmit(address(productCatalogue));
+        emit Events.ProductSet(
+            12345,
+            defaults.usdcProduct().productType,
+            defaults.usdcProduct().baseAsset,
+            defaults.usdcProduct().quoteAsset,
+            defaults.usdcProduct().takerFee,
+            defaults.usdcProduct().makerFee,
+            defaults.usdcProduct().isMakerRebate
+        );
+        productCatalogue.setProduct(12345, defaults.usdcProduct());
+        vm.expectRevert(bytes4(keccak256("SpotPairAlreadyExists()")));
+        productCatalogue.setProduct(usdcProductId, product);
+    }
+
     function test_Fail_SetProduct_BaseAsset_ZERO() public {
         vm.expectRevert(bytes4(keccak256("BaseAssetInvalid()")));
         productCatalogue.setProduct(
