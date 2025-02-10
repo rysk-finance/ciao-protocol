@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
+import "lib/solmate/src/tokens/ERC20.sol";
 import "lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import "lib/openzeppelin-contracts-upgradeable/contracts/utils/cryptography/EIP712Upgradeable.sol";
 
@@ -171,7 +172,7 @@ contract OrderDispatch is EIP712Upgradeable, AccessControl {
                 ciao.withdrawalReceipts(
                     Commons.getSubAccount(withdrawal.account, withdrawal.subAccountId),
                     withdrawal.asset
-                ).quantity < withdrawal.quantity
+                ).quantity != Commons.convertToE18(withdrawal.quantity, ERC20(withdrawal.asset).decimals())
             ) revert Errors.SignatureInvalid();
         }
         ciao.executeWithdrawal(
