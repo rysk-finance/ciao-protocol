@@ -198,6 +198,13 @@ contract ProductCatalogueBaseTest is Base_Test {
             1, Structs.Product(1, address(usdc), address(0), true, 1, 1, false)
         );
     }
+     
+    function test_Fail_SetProduct_QuoteAsset_Not_CoreCollateral() public {
+        vm.expectRevert(bytes4(keccak256("QuoteAssetInvalid()")));
+        productCatalogue.setProduct(
+            1, Structs.Product(1, address(usdc), address(weth), true, 1, 1, false)
+        );
+    }
 
     function test_Fail_SetProduct_NotOwner() public {
         noop();
