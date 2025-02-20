@@ -81,6 +81,42 @@ contract OrderDispatchWithdrawBaseTest is OrderDispatchBase {
         assertEq(ciao.subAccountAssetSetLength(subAccount), 2);
     }
 
+    function test_Faul_Withdraw_Full_Usdc_No_Sig_But_Receipt_Incorrect_Amount_Under() public {
+        address subAccount = Commons.getSubAccount(users.alice, 1);
+        uint256 quantity = defaults.usdcDepositQuantity();
+        address asset = address(usdc);
+        emit Events.RequestWithdrawal(users.alice, 1, asset, quantity);
+        vm.startPrank(users.alice);
+        ciao.requestWithdrawal(1, quantity, asset);
+        (uint256 _quantity, uint256 _requestTimestamp) = ciao.withdrawalReceipts(subAccount, asset);
+        assertEq(Commons.convertToE18(quantity, usdc.decimals()), _quantity);
+        assertEq(block.timestamp, _requestTimestamp);
+
+        constructWithdrawPayload(users.alice, 1, asset, quantity - 1, "a");
+        vm.startPrank(users.gov);
+        vm.expectRevert(bytes4(keccak256("SignatureInvalid()")));
+        orderDispatch.ingresso(transaction);
+
+    }
+
+    function test_Faul_Withdraw_Full_Usdc_No_Sig_But_Receipt_Incorrect_Amount_Over() public {
+        address subAccount = Commons.getSubAccount(users.alice, 1);
+        uint256 quantity = defaults.usdcDepositQuantity();
+        address asset = address(usdc);
+        emit Events.RequestWithdrawal(users.alice, 1, asset, quantity);
+        vm.startPrank(users.alice);
+        ciao.requestWithdrawal(1, quantity, asset);
+        (uint256 _quantity, uint256 _requestTimestamp) = ciao.withdrawalReceipts(subAccount, asset);
+        assertEq(Commons.convertToE18(quantity, usdc.decimals()), _quantity);
+        assertEq(block.timestamp, _requestTimestamp);
+
+        constructWithdrawPayload(users.alice, 1, asset, quantity + 1, "a");
+        vm.startPrank(users.gov);
+        vm.expectRevert(bytes4(keccak256("SignatureInvalid()")));
+        orderDispatch.ingresso(transaction);
+
+    }
+
     function test_Fail_cant_reuse_signature() public {
         address subAccount = Commons.getSubAccount(users.alice, 1);
         uint256 Quantity = defaults.usdcDepositQuantity();

@@ -1,9 +1,11 @@
 pragma solidity >=0.8.19;
 
+import "./interfaces/ICiao.sol";
 import "./interfaces/Events.sol";
 import "./interfaces/Errors.sol";
 import "./interfaces/Structs.sol";
 
+import "./libraries/Commons.sol";
 import "./libraries/AccessControl.sol";
 
 //     ____                 __           __  ______      __        __
@@ -39,7 +41,7 @@ contract ProductCatalogue is AccessControl {
         _isAdmin();
         if (productId == 0) revert Errors.ProductIdInvalid();
         if (product.baseAsset == address(0)) revert Errors.BaseAssetInvalid();
-        if (product.quoteAsset == address(0)) revert Errors.QuoteAssetInvalid();
+        if (product.quoteAsset != ICiao(Commons.ciao(address(addressManifest))).coreCollateralAddress()) revert Errors.QuoteAssetInvalid();
         if (products[productId].baseAsset != address(0)) revert Errors.ProductAlreadySet();
         if (product.isMakerRebate) {
             if (product.makerFee > product.takerFee) revert Errors.MakerRebateFeeInvalid();
@@ -55,6 +57,7 @@ contract ProductCatalogue is AccessControl {
             product.isMakerRebate
         );
         if (product.productType == 1) {
+        if (baseAssetQuoteAssetSpotIds[product.baseAsset][product.quoteAsset] != 0) revert Errors.SpotPairAlreadyExists();
             baseAssetQuoteAssetSpotIds[product.baseAsset][product.quoteAsset] = productId;
         }
         emit Events.BaseAssetQuoteAssetSpotIdSet(product.baseAsset, product.quoteAsset, productId);
