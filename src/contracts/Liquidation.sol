@@ -356,7 +356,7 @@ contract Liquidation is AccessControl {
                 // invalid as spread
                 spotBalance = 0;
             }
-            if (_furnace().getSpreadPenalty(spotAssetAddress).maintenance == 1) {
+            if (_furnace().getSpreadPenalty(spotAssetAddress).maintenance == 1e18) {
                 // invalid as spread
                 spotBalance = 0;
             }
